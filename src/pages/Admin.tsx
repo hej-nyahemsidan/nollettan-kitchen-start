@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMenu, WeeklyMeal, MenuItem, MenuData } from "@/contexts/MenuContext";
 import { Lock, Save, Plus, Trash2, Eye, EyeOff, Utensils, ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { 
     menuData, 
     updateMenuData, 
@@ -41,24 +44,75 @@ const Admin = () => {
   } = useMenu();
   const { toast } = useToast();
 
-  // Admin password - in a real app, this would be from environment variables
-  const ADMIN_PASSWORD = 'nollettan2024rm';
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    };
+    checkAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      toast({
-        title: "Inloggad!",
-        description: "Välkommen till admin-panelen.",
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-    } else {
+
+      if (error) {
+        // If user doesn't exist, try to sign up
+        if (error.message.includes('Invalid login credentials')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+
+          if (signUpError) throw signUpError;
+
+          toast({
+            title: "Konto skapat!",
+            description: "Du är nu inloggad och kan administrera menyn.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inloggad!",
+          description: "Välkommen till admin-panelen.",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Fel lösenord",
-        description: "Försök igen.",
+        title: "Inloggning misslyckades",
+        description: error.message || "Kontrollera dina uppgifter och försök igen.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setEmail('');
+    setPassword('');
+    toast({
+      title: "Utloggad",
+      description: "Du har loggats ut från admin-panelen.",
+    });
   };
 
   const handleAddMeal = (dayIndex: number) => {
@@ -148,6 +202,14 @@ const Admin = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker flex items-center justify-center">
+        <div className="text-restaurant-gold text-xl">Laddar...</div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker flex items-center justify-center p-4">
@@ -168,15 +230,28 @@ const Admin = () => {
               <Lock className="w-6 h-6" />
               Admin Inloggning
             </CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Logga in för att administrera menyn
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Input
+                  type="email"
+                  placeholder="E-postadress"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Lösenord"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                   className="pr-10"
                 />
                 <Button
@@ -189,9 +264,16 @@ const Admin = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              <Button type="submit" className="w-full bg-restaurant-gold text-restaurant-dark hover:bg-restaurant-gold/90">
-                Logga in
+              <Button 
+                type="submit" 
+                className="w-full bg-restaurant-gold text-restaurant-dark hover:bg-restaurant-gold/90"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loggar in...' : 'Logga in'}
               </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Om du inte har ett konto skapas det automatiskt vid första inloggningen
+              </p>
             </form>
           </CardContent>
         </Card>
@@ -223,10 +305,7 @@ const Admin = () => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => {
-                setIsAuthenticated(false);
-                setPassword('');
-              }}
+              onClick={handleLogout}
             >
               Logga ut
             </Button>
