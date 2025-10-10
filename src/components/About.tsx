@@ -49,7 +49,7 @@ const About = () => {
               <div className="rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 group-hover:rotate-1 group-hover:-translate-y-2">
                 <img
                   src={nollEttanInterior}
-                  alt="Noll Ettans moderna interiör med orange stolar, hängande lampor och mysig atmosfär i Hammarby Sjöstad"
+                  alt="Noll Ettan restaurang lunch Hammarby Sjöstad - mysig kvarterskrog interior med moderna stolar och lampor Stockholm"
                   className="w-full h-80 md:h-96 object-cover hover:scale-110 transition-transform duration-700"
                   loading="lazy"
                 />
@@ -64,7 +64,7 @@ const About = () => {
               <div className="rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 group-hover:-rotate-1 group-hover:-translate-y-2">
                 <img
                   src={hammarbyModernBuilding}
-                  alt="Modern arkitektur i Hammarby Sjöstad med färgglada fasader och blå himmel"
+                  alt="Hammarby Sjöstad Stockholm - moderna bostäder nära Noll Ettan restaurang och catering"
                   className="w-full h-80 md:h-96 object-cover hover:scale-110 transition-transform duration-700"
                   loading="lazy"
                 />
