@@ -67,7 +67,7 @@ const Hero = memo(() => {
         >
           <source src="/videos/hero-background.mov" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-restaurant-dark/60 via-restaurant-dark/70 to-restaurant-dark/80"></div>
       </div>
       
       {/* Content */}
