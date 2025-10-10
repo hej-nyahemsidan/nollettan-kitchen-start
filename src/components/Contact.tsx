@@ -129,7 +129,7 @@ const Contact = () => {
         <div className="grid lg:grid-cols-2 gap-16 mb-16">
           {/* Contact Information */}
           <div className="animate-in slide-in-from-left-8 duration-1000 delay-300">
-            <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:border-restaurant-gold/40 hover:-translate-y-2 transition-all duration-500 group h-full">
+            <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:border-restaurant-gold/40 hover:-translate-y-2 transition-all duration-500 group h-full overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-xl text-restaurant-gold group-hover:text-restaurant-gold-light transition-colors">
                   Kontaktinformation
