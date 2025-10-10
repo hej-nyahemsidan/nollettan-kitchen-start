@@ -13,15 +13,11 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import emailjs from '@emailjs/browser';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import svenskBuffeNew from "@/assets/svensk-buffe-new.png";
-import italienskCateringNew from "@/assets/italiensk-catering-new.png";
-import libanesiskCateringNew from "@/assets/libanesisk-catering-new.webp";
 
 const cateringOptions = [
   {
     title: "Svensk Buffé",
     icon: "🍲",
-    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Svensk+Buffe",
     description: "Klassisk svensk buffé med lokala råvaror och traditionella smaker",
     examples: [
       "Skagenröra med dill och citron",
@@ -37,12 +33,11 @@ const cateringOptions = [
   {
     title: "Italiensk Catering",
     icon: "🍝",
-    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Italiensk+Catering",
     description: "Autentiska italienska smaker med färska råvaror och traditionella recept",
     examples: [
       "Antipasti - marinerade grönsaker och oliver",
       "Insalata caprese med buffelmozzarella",
-      "Bruschetta med tomater och basilika", 
+      "Bruschetta med tomater och basilika",
       "Pasta med hemgjord pesto",
       "Pinsa pizza med tryffel och ricotta",
       "Prosciutto di Parma",
@@ -53,7 +48,6 @@ const cateringOptions = [
   {
     title: "Sliders & Varma Wraps",
     icon: "🍔",
-    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Sliders+%26+Wraps",
     description: "Perfekt för lunch eller mingel - lätta att äta och alltid populära",
     examples: [
       "BBQ pulled pork sliders",
@@ -69,7 +63,6 @@ const cateringOptions = [
   {
     title: "Mellanöstern Mezze",
     icon: "🫒",
-    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Mellanoestern+Mezze",
     description: "Färska mezze-rätter, hummus och välkryddade grönsaker från Mellanöstern",
     examples: [
       "Hummus med olivolja och paprika",
@@ -248,15 +241,6 @@ const Catering = () => {
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           {cateringOptions.map((option, index) => (
             <Card key={index} className="card-restaurant bg-muted/10 border-restaurant-gold/20 group animate-in slide-in-from-bottom-8 duration-700 hover:-translate-y-3 hover:shadow-2xl hover:border-restaurant-gold/40 transition-all duration-500" style={{ animationDelay: `${index * 200}ms` }}>
-              {option.image && (
-                <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              )}
               <CardHeader>
                 <CardTitle className="text-xl text-restaurant-gold flex items-center gap-3 group-hover:scale-110 transition-transform duration-300">
                   <span className="text-2xl group-hover:animate-bounce" role="img" aria-label={option.title}>{option.icon}</span>
