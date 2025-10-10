@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 // Weekly lunch items (no prices)
 export interface WeeklyMeal {
@@ -362,36 +364,393 @@ const DEFAULT_MENU: MenuData = {
 };
 
 export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [menuData, setMenuData] = useState<MenuData>(() => {
-    // Try to load from localStorage
-    const saved = localStorage.getItem('nollettan-menu');
-    if (saved) {
-      try {
-        const parsedData = JSON.parse(saved);
-        // Merge with defaults to ensure all new fields exist
-        return {
-          ...DEFAULT_MENU,
-          ...parsedData,
-          // Ensure new fields exist
-          lunchIncluded: parsedData.lunchIncluded || DEFAULT_MENU.lunchIncluded,
-          lunchPricing: parsedData.lunchPricing || DEFAULT_MENU.lunchPricing,
-          alwaysOnMenu: parsedData.alwaysOnMenu || DEFAULT_MENU.alwaysOnMenu,
-          pinsaPizza: parsedData.pinsaPizza || DEFAULT_MENU.pinsaPizza,
-          salads: parsedData.salads || DEFAULT_MENU.salads,
-          pasta: parsedData.pasta || DEFAULT_MENU.pasta,
-          categoryTexts: parsedData.categoryTexts || DEFAULT_MENU.categoryTexts
-        };
-      } catch (error) {
-        console.error('Error parsing saved menu data:', error);
-        return DEFAULT_MENU;
+  const [menuData, setMenuData] = useState<MenuData>(DEFAULT_MENU);
+  const [currentMenuId, setCurrentMenuId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch menu data from Supabase
+  useEffect(() => {
+    loadMenuFromDatabase();
+  }, []);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!currentMenuId) return;
+
+    const channel = supabase
+      .channel('menu-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'menu_data',
+        filter: `id=eq.${currentMenuId}`
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'weekly_lunch'
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'menu_items'
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'lunch_included'
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'lunch_pricing'
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'category_texts'
+      }, () => {
+        loadMenuFromDatabase();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentMenuId]);
+
+  const loadMenuFromDatabase = async () => {
+    try {
+      // Get the most recent menu_data
+      const { data: menuDataRows, error: menuDataError } = await supabase
+        .from('menu_data')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (menuDataError) throw menuDataError;
+
+      if (!menuDataRows || menuDataRows.length === 0) {
+        // No menu in database, initialize with default
+        await initializeDefaultMenu();
+        return;
       }
+
+      const menuRecord = menuDataRows[0];
+      setCurrentMenuId(menuRecord.id);
+
+      // Fetch all related data
+      const [weeklyLunchRes, menuItemsRes, lunchIncludedRes, lunchPricingRes, categoryTextsRes] = await Promise.all([
+        supabase.from('weekly_lunch').select('*').eq('menu_data_id', menuRecord.id).order('order_index'),
+        supabase.from('menu_items').select('*').eq('menu_data_id', menuRecord.id).order('order_index'),
+        supabase.from('lunch_included').select('*').eq('menu_data_id', menuRecord.id).order('order_index'),
+        supabase.from('lunch_pricing').select('*').eq('menu_data_id', menuRecord.id).single(),
+        supabase.from('category_texts').select('*').eq('menu_data_id', menuRecord.id).single()
+      ]);
+
+      // Transform database data to MenuData format
+      const weeklyLunch: DayMenu[] = (weeklyLunchRes.data || []).map(row => ({
+        day: row.day,
+        meals: (row.meals as unknown) as WeeklyMeal[]
+      }));
+
+      const alwaysOnMenu = (menuItemsRes.data || [])
+        .filter(item => item.category === 'alwaysOnMenu')
+        .map(item => ({
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          category: 'Alltid på Noll Ettan'
+        }));
+
+      const pinsaPizza = (menuItemsRes.data || [])
+        .filter(item => item.category === 'pinsaPizza')
+        .map(item => ({
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          category: 'Pinsa Pizza'
+        }));
+
+      const salads = (menuItemsRes.data || [])
+        .filter(item => item.category === 'salads')
+        .map(item => ({
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          category: 'Sallader'
+        }));
+
+      const pasta = (menuItemsRes.data || [])
+        .filter(item => item.category === 'pasta')
+        .map(item => ({
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          category: 'Pasta'
+        }));
+
+      const lunchIncluded: LunchIncludedItem[] = (lunchIncludedRes.data || []).map(row => ({
+        name: row.name,
+        icon: row.icon
+      }));
+
+      const lunchPricing: LunchPricing = lunchPricingRes.data ? {
+        onSite: lunchPricingRes.data.on_site,
+        takeaway: lunchPricingRes.data.takeaway
+      } : DEFAULT_MENU.lunchPricing;
+
+      const categoryTexts: CategoryTexts = categoryTextsRes.data ? {
+        alwaysOnTitle: categoryTextsRes.data.always_on_title || '',
+        alwaysOnDescription: categoryTextsRes.data.always_on_description || '',
+        pinsaPizzaTitle: categoryTextsRes.data.pinsa_pizza_title || '',
+        pinsaPizzaDescription: categoryTextsRes.data.pinsa_pizza_description || '',
+        saladsTitle: categoryTextsRes.data.salads_title || '',
+        saladsDescription: categoryTextsRes.data.salads_description || '',
+        pastaTitle: categoryTextsRes.data.pasta_title || '',
+        pastaDescription: categoryTextsRes.data.pasta_description || ''
+      } : DEFAULT_MENU.categoryTexts;
+
+      setMenuData({
+        week: menuRecord.week,
+        weeklyLunch,
+        alwaysOnMenu,
+        pinsaPizza,
+        salads,
+        pasta,
+        lunchIncluded,
+        lunchPricing,
+        categoryTexts
+      });
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading menu from database:', error);
+      toast({
+        title: "Error",
+        description: "Kunde inte ladda menyn från databasen",
+        variant: "destructive"
+      });
+      setIsLoading(false);
     }
-    return DEFAULT_MENU;
-  });
+  };
+
+  const initializeDefaultMenu = async () => {
+    try {
+      // Create menu_data record
+      const { data: menuRecord, error: menuError } = await supabase
+        .from('menu_data')
+        .insert({ week: DEFAULT_MENU.week })
+        .select()
+        .single();
+
+      if (menuError) throw menuError;
+      setCurrentMenuId(menuRecord.id);
+
+      // Insert weekly lunch
+      const weeklyLunchData = DEFAULT_MENU.weeklyLunch.map((day, index) => ({
+        menu_data_id: menuRecord.id,
+        day: day.day,
+        meals: day.meals as unknown as any,
+        order_index: index
+      }));
+      await supabase.from('weekly_lunch').insert(weeklyLunchData);
+
+      // Insert menu items
+      const menuItemsData = [
+        ...DEFAULT_MENU.alwaysOnMenu.map((item, index) => ({
+          menu_data_id: menuRecord.id,
+          category: 'alwaysOnMenu',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...DEFAULT_MENU.pinsaPizza.map((item, index) => ({
+          menu_data_id: menuRecord.id,
+          category: 'pinsaPizza',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...DEFAULT_MENU.salads.map((item, index) => ({
+          menu_data_id: menuRecord.id,
+          category: 'salads',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...DEFAULT_MENU.pasta.map((item, index) => ({
+          menu_data_id: menuRecord.id,
+          category: 'pasta',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        }))
+      ];
+      await supabase.from('menu_items').insert(menuItemsData);
+
+      // Insert lunch included
+      const lunchIncludedData = DEFAULT_MENU.lunchIncluded.map((item, index) => ({
+        menu_data_id: menuRecord.id,
+        name: item.name,
+        icon: item.icon,
+        order_index: index
+      }));
+      await supabase.from('lunch_included').insert(lunchIncludedData);
+
+      // Insert lunch pricing
+      await supabase.from('lunch_pricing').insert({
+        menu_data_id: menuRecord.id,
+        on_site: DEFAULT_MENU.lunchPricing.onSite,
+        takeaway: DEFAULT_MENU.lunchPricing.takeaway
+      });
+
+      // Insert category texts
+      await supabase.from('category_texts').insert({
+        menu_data_id: menuRecord.id,
+        always_on_title: DEFAULT_MENU.categoryTexts.alwaysOnTitle,
+        always_on_description: DEFAULT_MENU.categoryTexts.alwaysOnDescription,
+        pinsa_pizza_title: DEFAULT_MENU.categoryTexts.pinsaPizzaTitle,
+        pinsa_pizza_description: DEFAULT_MENU.categoryTexts.pinsaPizzaDescription,
+        salads_title: DEFAULT_MENU.categoryTexts.saladsTitle,
+        salads_description: DEFAULT_MENU.categoryTexts.saladsDescription,
+        pasta_title: DEFAULT_MENU.categoryTexts.pastaTitle,
+        pasta_description: DEFAULT_MENU.categoryTexts.pastaDescription
+      });
+
+      await loadMenuFromDatabase();
+    } catch (error) {
+      console.error('Error initializing default menu:', error);
+      toast({
+        title: "Error",
+        description: "Kunde inte initiera menyn",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const saveToDatabase = async (data: MenuData) => {
+    if (!currentMenuId) return;
+
+    try {
+      // Update menu_data
+      await supabase
+        .from('menu_data')
+        .update({ week: data.week })
+        .eq('id', currentMenuId);
+
+      // Update weekly lunch
+      await supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId);
+      const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
+        menu_data_id: currentMenuId,
+        day: day.day,
+        meals: day.meals as unknown as any,
+        order_index: index
+      }));
+      await supabase.from('weekly_lunch').insert(weeklyLunchData);
+
+      // Update menu items
+      await supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId);
+      const menuItemsData = [
+        ...data.alwaysOnMenu.map((item, index) => ({
+          menu_data_id: currentMenuId,
+          category: 'alwaysOnMenu',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...data.pinsaPizza.map((item, index) => ({
+          menu_data_id: currentMenuId,
+          category: 'pinsaPizza',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...data.salads.map((item, index) => ({
+          menu_data_id: currentMenuId,
+          category: 'salads',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        })),
+        ...data.pasta.map((item, index) => ({
+          menu_data_id: currentMenuId,
+          category: 'pasta',
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          order_index: index
+        }))
+      ];
+      await supabase.from('menu_items').insert(menuItemsData);
+
+      // Update lunch included
+      await supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId);
+      const lunchIncludedData = data.lunchIncluded.map((item, index) => ({
+        menu_data_id: currentMenuId,
+        name: item.name,
+        icon: item.icon,
+        order_index: index
+      }));
+      await supabase.from('lunch_included').insert(lunchIncludedData);
+
+      // Update lunch pricing
+      await supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId);
+      await supabase.from('lunch_pricing').insert({
+        menu_data_id: currentMenuId,
+        on_site: data.lunchPricing.onSite,
+        takeaway: data.lunchPricing.takeaway
+      });
+
+      // Update category texts
+      await supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId);
+      await supabase.from('category_texts').insert({
+        menu_data_id: currentMenuId,
+        always_on_title: data.categoryTexts.alwaysOnTitle,
+        always_on_description: data.categoryTexts.alwaysOnDescription,
+        pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
+        pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
+        salads_title: data.categoryTexts.saladsTitle,
+        salads_description: data.categoryTexts.saladsDescription,
+        pasta_title: data.categoryTexts.pastaTitle,
+        pasta_description: data.categoryTexts.pastaDescription
+      });
+
+      toast({
+        title: "Sparat!",
+        description: "Menyändringar sparade i databasen",
+      });
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      toast({
+        title: "Error",
+        description: "Kunde inte spara ändringarna",
+        variant: "destructive"
+      });
+    }
+  };
 
   const updateMenuData = (data: MenuData) => {
     setMenuData(data);
-    localStorage.setItem('nollettan-menu', JSON.stringify(data));
+    saveToDatabase(data);
   };
 
   const updateDayMenu = (dayIndex: number, meals: WeeklyMeal[]) => {
