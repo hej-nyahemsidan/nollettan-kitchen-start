@@ -502,10 +502,13 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           category: 'Pasta'
         }));
 
-      const lunchIncluded: LunchIncludedItem[] = (lunchIncludedRes.data || []).map(row => ({
+      const dbLunchIncluded = (lunchIncludedRes.data || []).map(row => ({
         name: row.name,
         icon: row.icon
       }));
+      const lunchIncluded: LunchIncludedItem[] = dbLunchIncluded.length > 0 
+        ? dbLunchIncluded 
+        : DEFAULT_MENU.lunchIncluded;
 
       const lunchPricing: LunchPricing = lunchPricingRes.data ? {
         onSite: lunchPricingRes.data.on_site,
