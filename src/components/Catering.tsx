@@ -248,15 +248,6 @@ const Catering = () => {
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           {cateringOptions.map((option, index) => (
             <Card key={index} className="card-restaurant bg-muted/10 border-restaurant-gold/20 group animate-in slide-in-from-bottom-8 duration-700 hover:-translate-y-3 hover:shadow-2xl hover:border-restaurant-gold/40 transition-all duration-500" style={{ animationDelay: `${index * 200}ms` }}>
-              {option.image && (
-                <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              )}
               <CardHeader>
                 <CardTitle className="text-xl text-restaurant-gold flex items-center gap-3 group-hover:scale-110 transition-transform duration-300">
                   <span className="text-2xl group-hover:animate-bounce" role="img" aria-label={option.title}>{option.icon}</span>
