@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MenuProvider } from "@/contexts/MenuContext";
-import { TestKeepAlive } from "@/components/TestKeepAlive";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -17,7 +16,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <TestKeepAlive />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
