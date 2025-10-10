@@ -54,11 +54,12 @@ Deno.serve(async (req) => {
       }
     )
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     console.error(`[${new Date().toISOString()}] Unexpected error:`, error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: errorMessage,
         timestamp: new Date().toISOString()
       }),
       { 
