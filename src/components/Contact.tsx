@@ -136,7 +136,7 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 h-full flex flex-col">
-                <div className="flex items-center gap-4 hover:bg-white/5 p-3 rounded-lg transition-colors cursor-pointer group/item">
+                <div className="flex items-center gap-4 hover:bg-white/5 p-3 rounded-lg overflow-hidden transition-colors cursor-pointer group/item">
                   <Phone className="icon-standard icon-spacing group-hover/item:animate-bounce" />
                   <div>
                     <p className="text-restaurant-text-light mb-2">Telefon</p>
@@ -149,7 +149,7 @@ const Contact = () => {
                   </div>
                 </div>
               
-                <div className="flex items-center gap-4 hover:bg-white/5 p-3 rounded-lg transition-colors cursor-pointer group/item">
+                <div className="flex items-center gap-4 hover:bg-white/5 p-3 rounded-lg overflow-hidden transition-colors cursor-pointer group/item">
                   <Mail className="icon-standard icon-spacing group-hover/item:animate-pulse" />
                   <div>
                     <p className="text-restaurant-text-light mb-2">E-post</p>
@@ -162,7 +162,7 @@ const Contact = () => {
                   </div>
                 </div>
               
-                <div className="flex items-start gap-4 hover:bg-white/5 p-3 rounded-lg transition-colors group/item">
+                <div className="flex items-start gap-4 hover:bg-white/5 p-3 rounded-lg overflow-hidden transition-colors group/item">
                   <MapPin className="icon-standard icon-spacing mt-1 group-hover/item:animate-bounce" />
                   <div className="space-y-3">
                     <p className="text-restaurant-text-light mb-2">Adress</p>
@@ -181,7 +181,7 @@ const Contact = () => {
                   </div>
                 </div>
               
-              <div className="flex items-start gap-4 hover:bg-white/5 p-3 rounded-lg transition-colors group/item flex-1">
+              <div className="flex items-start gap-4 hover:bg-white/5 p-3 rounded-lg overflow-hidden transition-colors group/item flex-1">
                   <Clock className="icon-standard icon-spacing mt-1 group-hover/item:animate-spin" />
                   <div>
                     <p className="text-restaurant-text-light mb-2">Öppettider</p>
@@ -198,7 +198,7 @@ const Contact = () => {
 
           {/* Contact Form */}
           <div className="animate-in slide-in-from-right-8 duration-1000 delay-500">
-            <Card id="contact-form" className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:border-restaurant-gold/40 hover:-translate-y-2 transition-all duration-500 h-full">
+            <Card id="contact-form" className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:border-restaurant-gold/40 hover:-translate-y-2 transition-all duration-500 h-full overflow-hidden">
             <CardHeader>
               <CardTitle className="text-xl text-restaurant-gold">
                 Skicka ett meddelande
@@ -322,7 +322,7 @@ const Contact = () => {
 
         {/* Google Maps and Area Image - Side by Side */}
         <div className="grid lg:grid-cols-2 gap-8 mb-16 animate-in slide-in-from-bottom-8 duration-1000 delay-700">
-          <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group">
+          <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group overflow-hidden">
             <CardContent className="p-0">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2034.8474692836877!2d18.116455476553595!3d59.30687817447582!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x465f77e2b3c5c5c5%3A0x5c5c5c5c5c5c5c5c!2sHammarbybacken%2027%2C%20120%2030%20Stockholm!5e0!3m2!1ssv!2sse!4v1694872892347!5m2!1ssv!2sse"
@@ -338,7 +338,7 @@ const Contact = () => {
             </CardContent>
           </Card>
           
-          <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group">
+          <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group overflow-hidden">
             <CardContent className="p-0">
               <img
                 src={hammarbyStreetView}
