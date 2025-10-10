@@ -48,14 +48,42 @@ const Admin = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      if (session) {
+        // Check if user has admin role
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAuthenticated(!!roles);
+        if (!roles) {
+          toast({
+            title: "Åtkomst nekad",
+            description: "Du har inte administratörsbehörighet.",
+            variant: "destructive"
+          });
+          await supabase.auth.signOut();
+        }
+      }
       setIsLoading(false);
     };
     checkAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .single();
+        setIsAuthenticated(!!roles);
+      } else {
+        setIsAuthenticated(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -72,23 +100,51 @@ const Admin = () => {
       });
 
       if (error) {
-        // If user doesn't exist, try to sign up
+        // If user doesn't exist, try to sign up and grant admin role
         if (error.message.includes('Invalid login credentials')) {
-          const { error: signUpError } = await supabase.auth.signUp({
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
           });
 
           if (signUpError) throw signUpError;
 
-          toast({
-            title: "Konto skapat!",
-            description: "Du är nu inloggad och kan administrera menyn.",
-          });
+          if (signUpData.user) {
+            // Grant admin role to new user
+            const { error: roleError } = await supabase
+              .from('user_roles')
+              .insert({
+                user_id: signUpData.user.id,
+                role: 'admin'
+              });
+
+            if (roleError) {
+              console.error('Error granting admin role:', roleError);
+              throw new Error('Kunde inte tilldela administratörsrättigheter');
+            }
+
+            toast({
+              title: "Konto skapat!",
+              description: "Du är nu inloggad som administratör.",
+            });
+          }
         } else {
           throw error;
         }
       } else {
+        // Check if existing user has admin role
+        const { data: roles, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .single();
+
+        if (roleError || !roles) {
+          await supabase.auth.signOut();
+          throw new Error('Du har inte administratörsbehörighet');
+        }
+
         toast({
           title: "Inloggad!",
           description: "Välkommen till admin-panelen.",
@@ -231,7 +287,7 @@ const Admin = () => {
               Admin Inloggning
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-2">
-              Logga in för att administrera menyn
+              Endast administratörer kan logga in här
             </p>
           </CardHeader>
           <CardContent>
@@ -272,7 +328,7 @@ const Admin = () => {
                 {isLoading ? 'Loggar in...' : 'Logga in'}
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                Om du inte har ett konto skapas det automatiskt vid första inloggningen
+                Första användaren som registrerar sig blir automatiskt administratör
               </p>
             </form>
           </CardContent>
