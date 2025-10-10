@@ -239,6 +239,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      any_admin_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      can_manage_roles: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: { check_user_id: string }
         Returns: boolean
