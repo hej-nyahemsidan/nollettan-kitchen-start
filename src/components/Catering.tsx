@@ -241,15 +241,15 @@ const Catering = () => {
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           {cateringOptions.map((option, index) => (
             <Card key={index} className="card-restaurant bg-muted/10 border-restaurant-gold/20 group animate-in slide-in-from-bottom-8 duration-700 hover:-translate-y-3 hover:shadow-2xl hover:border-restaurant-gold/40 transition-all duration-500" style={{ animationDelay: `${index * 200}ms` }}>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-xl text-restaurant-gold flex items-center gap-3 group-hover:scale-110 transition-transform duration-300">
                   <span className="text-2xl group-hover:animate-bounce" role="img" aria-label={option.title}>{option.icon}</span>
                   {option.title}
                 </CardTitle>
-                <p className="text-restaurant-text-light group-hover:text-restaurant-gold/80 transition-colors duration-300">{option.description}</p>
+                <p className="text-restaurant-text-light group-hover:text-restaurant-gold/80 transition-colors duration-300 text-sm">{option.description}</p>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="pt-0">
                 <Collapsible open={openAccordions.includes(index)} onOpenChange={() => toggleAccordion(index)}>
                   <CollapsibleTrigger className="flex items-center justify-between w-full text-left hover:bg-white/5 p-2 rounded transition-colors duration-300 group/trigger">
                     <h4 className="font-medium text-restaurant-gold text-sm group-hover/trigger:text-restaurant-gold-light transition-colors">Inspiration från menyn - vi kan göra det mesta!</h4>
@@ -259,8 +259,8 @@ const Catering = () => {
                     }
                   </CollapsibleTrigger>
                   <CollapsibleContent className="accordion-content">
-                    <div className="mt-4 space-y-2">
-                      <ul className="text-sm text-muted-foreground space-y-1">
+                    <div className="mt-3 space-y-1">
+                      <ul className="text-sm text-muted-foreground space-y-0.5">
                         {option.examples.map((example, idx) => (
                           <li key={idx} className="hover:text-restaurant-gold hover:translate-x-1 transition-all duration-200 cursor-default">• {example}</li>
                         ))}
