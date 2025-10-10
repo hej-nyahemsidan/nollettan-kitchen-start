@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Coffee, ChefHat, Soup, Salad, Cookie, Heart } from "lucide-react";
 import { useMenu } from "@/contexts/MenuContext";
+import { icons } from "lucide-react";
 
 const WeeklyMenu = () => {
   const { menuData } = useMenu();
@@ -105,27 +106,16 @@ const WeeklyMenu = () => {
                       Till lunchmenyn ingår alltid:
                     </h3>
                     <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
-                       <div className="flex flex-col items-center gap-4 md:gap-3">
-                         <Soup className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />
-                         <span className="text-base text-restaurant-text-light">Dagens soppa</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-4 md:gap-3">
-                         <Salad className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />
-                         <span className="text-base text-restaurant-text-light">Salladsbuffé</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-4 md:gap-3">
-                         <Cookie className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />
-                         <span className="text-base text-restaurant-text-light">Nybakat bröd</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-4 md:gap-3">
-                         <Coffee className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />
-                         <span className="text-base text-restaurant-text-light">Kaffe</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-4 md:gap-3">
-                         <Heart className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />
-                         <span className="text-base text-restaurant-text-light">En liten godbit</span>
-                       </div>
-                     </div>
+                      {menuData.lunchIncluded.map((item, index) => {
+                        const IconComponent = icons[item.icon as keyof typeof icons];
+                        return (
+                          <div key={index} className="flex flex-col items-center gap-4 md:gap-3">
+                            {IconComponent && <IconComponent className="w-8 h-8 md:w-6 md:h-6 text-restaurant-gold" />}
+                            <span className="text-base text-restaurant-text-light">{item.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                     
                      <div className="mt-8 pt-6 border-t border-restaurant-gold/20">
                        <h4 className="text-restaurant-gold font-semibold text-xl mb-4 text-center">Lunchpris</h4>
