@@ -10,7 +10,7 @@ import { contactSchema, type ContactFormData } from "@/lib/contact-schema";
 import { z } from 'zod';
 import emailjs from '@emailjs/browser';
 import nollEttanFacade from "@/assets/noll-ettan-facade.jpg";
-import hammarbyStreetView from "@/assets/hammarby-street-view.png";
+import hammarbyStreetView from "@/assets/hammarby-street-view-new.png";
 import hammarbyContactView from "@/assets/hammarby-contact-view.png";
 
 const Contact = () => {
@@ -341,7 +341,7 @@ const Contact = () => {
           <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group">
             <CardContent className="p-0">
               <img
-                src="https://placehold.co/800x600/1a1a1a/8B7355?text=Hammarby+Sjostad+View"
+                src={hammarbyStreetView}
                 alt="Gatvy över Hammarby Sjöstad med moderna byggnader och färgglada fasader"
                 className="w-full h-[360px] object-cover rounded-lg group-hover:scale-110 transition-transform duration-700"
                 loading="lazy"
