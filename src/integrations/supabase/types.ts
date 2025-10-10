@@ -14,7 +14,205 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      category_texts: {
+        Row: {
+          always_on_description: string | null
+          always_on_title: string | null
+          id: string
+          menu_data_id: string
+          pasta_description: string | null
+          pasta_title: string | null
+          pinsa_pizza_description: string | null
+          pinsa_pizza_title: string | null
+          salads_description: string | null
+          salads_title: string | null
+        }
+        Insert: {
+          always_on_description?: string | null
+          always_on_title?: string | null
+          id?: string
+          menu_data_id: string
+          pasta_description?: string | null
+          pasta_title?: string | null
+          pinsa_pizza_description?: string | null
+          pinsa_pizza_title?: string | null
+          salads_description?: string | null
+          salads_title?: string | null
+        }
+        Update: {
+          always_on_description?: string | null
+          always_on_title?: string | null
+          id?: string
+          menu_data_id?: string
+          pasta_description?: string | null
+          pasta_title?: string | null
+          pinsa_pizza_description?: string | null
+          pinsa_pizza_title?: string | null
+          salads_description?: string | null
+          salads_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_texts_menu_data_id_fkey"
+            columns: ["menu_data_id"]
+            isOneToOne: true
+            referencedRelation: "menu_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lunch_included: {
+        Row: {
+          icon: string
+          id: string
+          menu_data_id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          icon: string
+          id?: string
+          menu_data_id: string
+          name: string
+          order_index: number
+        }
+        Update: {
+          icon?: string
+          id?: string
+          menu_data_id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lunch_included_menu_data_id_fkey"
+            columns: ["menu_data_id"]
+            isOneToOne: false
+            referencedRelation: "menu_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lunch_pricing: {
+        Row: {
+          id: string
+          menu_data_id: string
+          on_site: number
+          takeaway: number
+        }
+        Insert: {
+          id?: string
+          menu_data_id: string
+          on_site: number
+          takeaway: number
+        }
+        Update: {
+          id?: string
+          menu_data_id?: string
+          on_site?: number
+          takeaway?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lunch_pricing_menu_data_id_fkey"
+            columns: ["menu_data_id"]
+            isOneToOne: true
+            referencedRelation: "menu_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_data: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          week: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          week: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          week?: number
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          category: string
+          description: string | null
+          id: string
+          menu_data_id: string
+          name: string
+          order_index: number
+          price: number
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          id?: string
+          menu_data_id: string
+          name: string
+          order_index: number
+          price: number
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          id?: string
+          menu_data_id?: string
+          name?: string
+          order_index?: number
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_menu_data_id_fkey"
+            columns: ["menu_data_id"]
+            isOneToOne: false
+            referencedRelation: "menu_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_lunch: {
+        Row: {
+          day: string
+          id: string
+          meals: Json
+          menu_data_id: string
+          order_index: number
+        }
+        Insert: {
+          day: string
+          id?: string
+          meals?: Json
+          menu_data_id: string
+          order_index: number
+        }
+        Update: {
+          day?: string
+          id?: string
+          meals?: Json
+          menu_data_id?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_lunch_menu_data_id_fkey"
+            columns: ["menu_data_id"]
+            isOneToOne: false
+            referencedRelation: "menu_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
