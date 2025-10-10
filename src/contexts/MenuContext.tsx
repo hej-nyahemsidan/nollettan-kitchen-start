@@ -58,6 +58,7 @@ export interface LunchPricing {
 interface MenuContextType {
   menuData: MenuData;
   updateMenuData: (data: MenuData) => void;
+  saveMenuData: () => Promise<void>;
   updateDayMenu: (dayIndex: number, meals: WeeklyMeal[]) => void;
   updateAlwaysOnMenu: (index: number, item: MenuItem) => void;
   addAlwaysOnMenuItem: (item: MenuItem) => void;
@@ -750,7 +751,11 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateMenuData = (data: MenuData) => {
     setMenuData(data);
-    saveToDatabase(data);
+    // AUTO-SAVE REMOVED - Only save when saveMenuData() is called explicitly
+  };
+
+  const saveMenuData = async () => {
+    await saveToDatabase(menuData);
   };
 
   const updateDayMenu = (dayIndex: number, meals: WeeklyMeal[]) => {
@@ -760,7 +765,8 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         index === dayIndex ? { ...day, meals } : day
       )
     };
-    updateMenuData(updatedData);
+    setMenuData(updatedData);
+    // AUTO-SAVE REMOVED
   };
 
 
@@ -769,22 +775,19 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedItems = menuData.alwaysOnMenu.map((menuItem, i) => 
       i === index ? item : menuItem
     );
-    const updatedData = { ...menuData, alwaysOnMenu: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, alwaysOnMenu: updatedItems });
   };
 
   const addAlwaysOnMenuItem = (item: MenuItem) => {
-    const updatedData = {
+    setMenuData({
       ...menuData,
       alwaysOnMenu: [...menuData.alwaysOnMenu, item]
-    };
-    updateMenuData(updatedData);
+    });
   };
 
   const deleteAlwaysOnMenuItem = (index: number) => {
     const updatedItems = menuData.alwaysOnMenu.filter((_, i) => i !== index);
-    const updatedData = { ...menuData, alwaysOnMenu: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, alwaysOnMenu: updatedItems });
   };
 
   // Pinsa Pizza handlers
@@ -792,22 +795,19 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedItems = menuData.pinsaPizza.map((menuItem, i) => 
       i === index ? item : menuItem
     );
-    const updatedData = { ...menuData, pinsaPizza: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, pinsaPizza: updatedItems });
   };
 
   const addPinsaPizza = (item: MenuItem) => {
-    const updatedData = {
+    setMenuData({
       ...menuData,
       pinsaPizza: [...menuData.pinsaPizza, item]
-    };
-    updateMenuData(updatedData);
+    });
   };
 
   const deletePinsaPizza = (index: number) => {
     const updatedItems = menuData.pinsaPizza.filter((_, i) => i !== index);
-    const updatedData = { ...menuData, pinsaPizza: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, pinsaPizza: updatedItems });
   };
 
   // Salads handlers
@@ -815,22 +815,19 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedItems = menuData.salads.map((menuItem, i) => 
       i === index ? item : menuItem
     );
-    const updatedData = { ...menuData, salads: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, salads: updatedItems });
   };
 
   const addSalad = (item: MenuItem) => {
-    const updatedData = {
+    setMenuData({
       ...menuData,
       salads: [...menuData.salads, item]
-    };
-    updateMenuData(updatedData);
+    });
   };
 
   const deleteSalad = (index: number) => {
     const updatedItems = menuData.salads.filter((_, i) => i !== index);
-    const updatedData = { ...menuData, salads: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, salads: updatedItems });
   };
 
   // Pasta handlers
@@ -838,22 +835,19 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedItems = menuData.pasta.map((menuItem, i) => 
       i === index ? item : menuItem
     );
-    const updatedData = { ...menuData, pasta: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, pasta: updatedItems });
   };
 
   const addPasta = (item: MenuItem) => {
-    const updatedData = {
+    setMenuData({
       ...menuData,
       pasta: [...menuData.pasta, item]
-    };
-    updateMenuData(updatedData);
+    });
   };
 
   const deletePasta = (index: number) => {
     const updatedItems = menuData.pasta.filter((_, i) => i !== index);
-    const updatedData = { ...menuData, pasta: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, pasta: updatedItems });
   };
 
   // Lunch Included handlers
@@ -861,46 +855,41 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updatedItems = menuData.lunchIncluded.map((includedItem, i) => 
       i === index ? item : includedItem
     );
-    const updatedData = { ...menuData, lunchIncluded: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, lunchIncluded: updatedItems });
   };
 
   const addLunchIncluded = (item: LunchIncludedItem) => {
-    const updatedData = {
+    setMenuData({
       ...menuData,
       lunchIncluded: [...menuData.lunchIncluded, item]
-    };
-    updateMenuData(updatedData);
+    });
   };
 
   const deleteLunchIncluded = (index: number) => {
     const updatedItems = menuData.lunchIncluded.filter((_, i) => i !== index);
-    const updatedData = { ...menuData, lunchIncluded: updatedItems };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, lunchIncluded: updatedItems });
   };
 
   // Lunch Pricing handlers
   const updateLunchPricing = (pricing: LunchPricing) => {
-    const updatedData = { ...menuData, lunchPricing: pricing };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, lunchPricing: pricing });
   };
 
   // Week handlers
   const updateWeek = (week: number) => {
-    const updatedData = { ...menuData, week };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, week });
   };
 
   // Category Texts handlers
   const updateCategoryTexts = (texts: CategoryTexts) => {
-    const updatedData = { ...menuData, categoryTexts: texts };
-    updateMenuData(updatedData);
+    setMenuData({ ...menuData, categoryTexts: texts });
   };
 
   return (
     <MenuContext.Provider value={{ 
       menuData, 
       updateMenuData, 
+      saveMenuData,
       updateDayMenu, 
       updateAlwaysOnMenu,
       addAlwaysOnMenuItem,

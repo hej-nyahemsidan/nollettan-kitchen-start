@@ -22,6 +22,7 @@ const Admin = () => {
   const { 
     menuData, 
     updateMenuData, 
+    saveMenuData,
     updateDayMenu, 
     updateAlwaysOnMenu,
     addAlwaysOnMenuItem,
@@ -43,6 +44,26 @@ const Admin = () => {
     updateCategoryTexts
   } = useMenu();
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      await saveMenuData();
+      toast({
+        title: "Sparat!",
+        description: "Alla ändringar har sparats i databasen.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fel",
+        description: "Kunde inte spara ändringarna. Försök igen.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Check if user is already authenticated
   useEffect(() => {
@@ -340,6 +361,19 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
       <div className="max-w-6xl mx-auto">
+        {/* Fixed Save Button Bar */}
+        <div className="fixed top-4 right-4 z-50 flex gap-4">
+          <Button
+            onClick={handleSaveChanges}
+            disabled={isSaving}
+            className="bg-restaurant-gold text-restaurant-dark hover:bg-restaurant-gold/90 shadow-lg"
+            size="lg"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isSaving ? "Sparar..." : "Spara ändringar"}
+          </Button>
+        </div>
+
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <Button
