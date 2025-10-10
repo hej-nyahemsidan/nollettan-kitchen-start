@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Noll Ettan Design System - Premium Scandinavian Restaurant */
+
+/* Fonts will be loaded via HTML preload for better performance */
+
+@layer base {
+  :root {
+    /* Noll Ettan Logo Colors - Exact Match */
+    --restaurant-dark: 202 24% 16%;        /* #1F2D32 - Exact logo dark blue */
+    --restaurant-gold: 42 64% 57%;         /* #D9A94A - Exact logo gold */
+    --restaurant-gold-light: 42 68% 62%;   /* Slightly lighter gold for hovers */
+    --restaurant-cream: 40 25% 98%;        /* Pure cream white */
+    --restaurant-text-light: 0 0% 96%;     /* #F5F5F5 - Light grey/white text */
+    --restaurant-text-dark: 202 24% 16%;   /* Same as dark background for light backgrounds */
+    
+    /* Gradient Colors */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--restaurant-gold)), hsl(var(--restaurant-gold-light)));
+    --gradient-dark: linear-gradient(135deg, hsl(var(--restaurant-dark)), hsl(202 25% 20%));
+    
+    /* Shadow Colors - Enhanced with elegant lighting */
+    --shadow-premium: 0 20px 40px -10px hsl(var(--restaurant-gold) / 0.3), 0 0 50px -15px hsl(var(--restaurant-gold) / 0.1);
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--restaurant-dark) / 0.4), 0 0 40px -10px hsl(var(--restaurant-gold) / 0.05);
+    --shadow-glow: 0 0 30px -5px hsl(var(--restaurant-gold) / 0.2);
+    --shadow-ambient: 0 8px 25px -8px hsl(var(--restaurant-gold) / 0.15);
+    
+    /* Semantic Colors - Enhanced for better accessibility */
+    --background: var(--restaurant-dark);
+    --foreground: var(--restaurant-text-light);
+
+    --card: var(--restaurant-dark);
+    --card-foreground: var(--restaurant-text-light);
+
+    --popover: var(--restaurant-dark);
+    --popover-foreground: var(--restaurant-text-light);
+
+    --primary: var(--restaurant-gold);
+    --primary-foreground: var(--restaurant-text-dark);
+
+    --secondary: var(--restaurant-cream);
+    --secondary-foreground: var(--restaurant-dark);
+
+    --muted: 202 20% 25%;
+    --muted-foreground: 202 15% 75%;
+
+    --accent: var(--restaurant-gold);
+    --accent-foreground: var(--restaurant-dark);
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: var(--restaurant-text-light);
+
+    --border: 202 20% 30%;
+    --input: 202 20% 30%;
+    --ring: var(--restaurant-gold);
+
+    --radius: 0.75rem;
+    
+    /* Typography Scale */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    
+    /* Enhanced Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-premium: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased leading-relaxed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-medium;
+  }
+
+  h1 {
+    @apply text-5xl md:text-6xl lg:text-7xl leading-tight mb-8 mt-12;
+  }
+
+  h2 {
+    @apply text-4xl md:text-5xl lg:text-6xl leading-tight mb-6 mt-10;
+  }
+
+  h3 {
+    @apply text-3xl md:text-4xl lg:text-5xl leading-tight mb-5 mt-8;
+  }
+
+  h4 {
+    @apply text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 mt-6;
+  }
+
+  h5 {
+    @apply text-xl md:text-2xl lg:text-3xl leading-tight mb-3 mt-5;
+  }
+
+  h6 {
+    @apply text-lg md:text-xl lg:text-2xl leading-tight mb-3 mt-4;
+  }
+
+  p {
+    @apply leading-relaxed mb-4 font-body;
+  }
+
+  ul, ol {
+    @apply leading-relaxed space-y-2;
+  }
+
+  li {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  /* Navigation Link Styles */
+  .story-link {
+    @apply inline-block py-2 px-1 leading-normal;
+    line-height: 1.4 !important;
+    padding-bottom: 4px !important;
+    overflow: visible !important;
+  }
+  
+  /* Premium Button Variants */
+  .btn-hero {
+    @apply bg-gradient-to-r from-primary to-accent text-primary-foreground px-8 py-3 md:px-10 md:py-4 rounded-xl font-semibold text-base md:text-lg
+           transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 
+           transform active:scale-95 border border-primary/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/10 text-restaurant-text-light border-2 border-white/30
+           px-6 py-3 rounded-xl font-semibold text-base md:text-lg transition-all duration-300 
+           hover:bg-white hover:text-restaurant-dark hover:scale-105
+           backdrop-blur-sm shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-premium {
+    @apply bg-restaurant-cream text-restaurant-dark px-8 py-3 rounded-lg font-medium
+           transition-all duration-300 hover:bg-primary hover:text-primary-foreground
+           hover:scale-105 shadow-md hover:shadow-lg;
+  }
+  
+  /* Enhanced Cards with Better Padding and Shadows */
+  .card-restaurant {
+    @apply bg-card/95 border border-border rounded-2xl overflow-hidden
+           shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3
+           backdrop-blur-sm;
+    box-shadow: 0 10px 25px -5px rgba(31, 45, 50, 0.3), 0 4px 12px -2px rgba(31, 45, 50, 0.2), 0 0 40px -10px rgba(217, 169, 74, 0.08);
+  }
+  
+  .card-premium {
+    @apply bg-gradient-to-br from-card to-card/80 border border-primary/20 rounded-2xl overflow-hidden
+           shadow-2xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2
+           backdrop-blur-lg p-8;
+    box-shadow: 0 20px 40px -10px rgba(217, 169, 74, 0.25), 0 8px 16px -4px rgba(31, 45, 50, 0.3), 0 0 60px -20px rgba(217, 169, 74, 0.15);
+  }
+  
+  /* Standard card content padding */
+  .card-content-padding {
+    @apply p-8;
+  }
+  
+  /* Enhanced Section Layouts with Better Spacing */
+  .section-padding {
+    @apply py-24 px-6 md:px-16 lg:px-20;
+  }
+  
+  .section-light {
+    @apply bg-restaurant-cream text-restaurant-text-dark py-24 px-6 md:px-16 lg:px-20;
+  }
+  
+  .section-premium {
+    @apply bg-gradient-to-br from-restaurant-dark to-restaurant-dark/95 py-24 px-6 md:px-16 lg:px-20;
+    box-shadow: inset 0 0 100px -50px rgba(217, 169, 74, 0.03);
+  }
+  
+  .section-dark {
+    @apply bg-restaurant-dark py-24 px-6 md:px-16 lg:px-20;
+  }
+  
+  /* Premium Text Effects */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  }
+  
+  .text-premium {
+    @apply text-restaurant-text-light drop-shadow-sm;
+  }
+  
+  /* Enhanced Animations */
+  .animate-fade-in {
+    @apply animate-in fade-in-0 slide-in-from-bottom-8 duration-700;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-xl;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-lg;
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 10px 25px -5px rgba(217, 169, 74, 0.3), 0 0 50px -15px rgba(217, 169, 74, 0.2);
+  }
+  
+  /* Icon Effects - Standardized */
+  .icon-hover {
+    @apply transition-all duration-300 hover:scale-110 hover:text-restaurant-gold hover:drop-shadow-sm;
+  }
+  
+  .icon-standard {
+    @apply text-restaurant-gold w-6 h-6;
+  }
+  
+  .icon-large {
+    @apply text-restaurant-gold w-8 h-8;
+  }
+  
+  .icon-small {
+    @apply text-restaurant-gold w-5 h-5;
+  }
+  
+  .icon-spacing {
+    @apply mr-3;
+  }
+  
+  .icon-spacing-vertical {
+    @apply mb-3;
+  }
+  
+  /* Special Effects */
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/10 border border-white/20;
+  }
+  
+  /* Sticky Elements */
+  .sticky-mobile {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-restaurant-dark/95 backdrop-blur-md border-t border-primary/20 p-3 md:p-4;
+  }
+  
+  /* Reviews & Social Proof */
+  .review-card {
+    @apply bg-white/5 backdrop-blur-sm border border-primary/20 rounded-xl p-8 hover-lift;
+    box-shadow: 0 8px 20px -5px rgba(31, 45, 50, 0.25), 0 3px 8px -2px rgba(217, 169, 74, 0.15), 0 0 40px -15px rgba(217, 169, 74, 0.08);
+  }
+  
+  /* USP Highlights */
+  .usp-card {
+    @apply bg-primary/10 backdrop-blur-sm border border-primary/30 rounded-xl p-8 text-center hover-glow;
+    box-shadow: 0 6px 16px -4px rgba(217, 169, 74, 0.2), 0 2px 6px -1px rgba(31, 45, 50, 0.2), 0 0 30px -10px rgba(217, 169, 74, 0.1);
+  }
+  
+  /* Content Spacing */
+  .content-spacing {
+    @apply space-y-8;
+  }
+  
+  .content-spacing-large {
+    @apply space-y-12;
+  }
+  
+  .section-spacing {
+    @apply mb-20;
+  }
+  
+  /* Elegant Lighting Effects */
+  .shadow-subtle {
+    box-shadow: 0 4px 12px -2px rgba(31, 45, 50, 0.15), 0 2px 4px -1px rgba(217, 169, 74, 0.15), 0 0 25px -10px rgba(217, 169, 74, 0.05);
+  }
+  
+  .shadow-premium-subtle {
+    box-shadow: 0 8px 20px -5px rgba(217, 169, 74, 0.25), 0 3px 8px -2px rgba(31, 45, 50, 0.15), 0 0 40px -15px rgba(217, 169, 74, 0.1);
+  }
+  
+  /* Ambient lighting for sections */
+  .ambient-glow {
+    position: relative;
+  }
+  
+  .ambient-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(217, 169, 74, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .ambient-glow > * {
+    position: relative;
+    z-index: 1;
+  }
+}
