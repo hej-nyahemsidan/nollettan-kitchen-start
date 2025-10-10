@@ -57,12 +57,13 @@ const Hero = memo(() => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden ambient-glow pt-32 sm:pt-28 md:pt-24 pb-32 md:pb-24">
       {/* Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 bg-restaurant-dark">
         <video
           autoPlay
           loop
           muted
           playsInline
+          preload="metadata"
           className="w-full h-full object-cover"
         >
           <source src="/videos/hero-background.mov" type="video/mp4" />
