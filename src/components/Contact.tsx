@@ -340,8 +340,8 @@ const Contact = () => {
           
           <Card className="card-restaurant bg-muted/10 border-restaurant-gold/20 hover:scale-105 transition-transform duration-500 group">
             <CardContent className="p-0">
-              <img 
-                src={hammarbyContactView} 
+              <img
+                src="https://placehold.co/800x600/1a1a1a/8B7355?text=Hammarby+Sjostad+View"
                 alt="Gatvy över Hammarby Sjöstad med moderna byggnader och färgglada fasader"
                 className="w-full h-[360px] object-cover rounded-lg group-hover:scale-110 transition-transform duration-700"
                 loading="lazy"

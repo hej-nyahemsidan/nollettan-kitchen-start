@@ -21,6 +21,7 @@ const cateringOptions = [
   {
     title: "Svensk Buffé",
     icon: "🍲",
+    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Svensk+Buffe",
     description: "Klassisk svensk buffé med lokala råvaror och traditionella smaker",
     examples: [
       "Skagenröra med dill och citron",
@@ -34,8 +35,9 @@ const cateringOptions = [
     ]
   },
   {
-    title: "Italiensk Catering", 
+    title: "Italiensk Catering",
     icon: "🍝",
+    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Italiensk+Catering",
     description: "Autentiska italienska smaker med färska råvaror och traditionella recept",
     examples: [
       "Antipasti - marinerade grönsaker och oliver",
@@ -51,6 +53,7 @@ const cateringOptions = [
   {
     title: "Sliders & Varma Wraps",
     icon: "🍔",
+    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Sliders+%26+Wraps",
     description: "Perfekt för lunch eller mingel - lätta att äta och alltid populära",
     examples: [
       "BBQ pulled pork sliders",
@@ -66,6 +69,7 @@ const cateringOptions = [
   {
     title: "Mellanöstern Mezze",
     icon: "🫒",
+    image: "https://placehold.co/600x400/1a1a1a/8B7355?text=Mellanoestern+Mezze",
     description: "Färska mezze-rätter, hummus och välkryddade grönsaker från Mellanöstern",
     examples: [
       "Hummus med olivolja och paprika",
@@ -244,6 +248,15 @@ const Catering = () => {
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           {cateringOptions.map((option, index) => (
             <Card key={index} className="card-restaurant bg-muted/10 border-restaurant-gold/20 group animate-in slide-in-from-bottom-8 duration-700 hover:-translate-y-3 hover:shadow-2xl hover:border-restaurant-gold/40 transition-all duration-500" style={{ animationDelay: `${index * 200}ms` }}>
+              {option.image && (
+                <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+                  <img
+                    src={option.image}
+                    alt={option.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+              )}
               <CardHeader>
                 <CardTitle className="text-xl text-restaurant-gold flex items-center gap-3 group-hover:scale-110 transition-transform duration-300">
                   <span className="text-2xl group-hover:animate-bounce" role="img" aria-label={option.title}>{option.icon}</span>
@@ -251,7 +264,7 @@ const Catering = () => {
                 </CardTitle>
                 <p className="text-restaurant-text-light group-hover:text-restaurant-gold/80 transition-colors duration-300">{option.description}</p>
               </CardHeader>
-              
+
               <CardContent>
                 <Collapsible open={openAccordions.includes(index)} onOpenChange={() => toggleAccordion(index)}>
                   <CollapsibleTrigger className="flex items-center justify-between w-full text-left hover:bg-white/5 p-2 rounded transition-colors duration-300 group/trigger">

@@ -47,8 +47,8 @@ const About = () => {
             {/* Restaurant Interior - Now full width on top */}
             <div className="relative group">
               <div className="rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 group-hover:rotate-1 group-hover:-translate-y-2">
-                <img 
-                  src={nollEttanInterior} 
+                <img
+                  src="https://placehold.co/800x600/1a1a1a/8B7355?text=Restaurant+Interior"
                   alt="Noll Ettans moderna interiör med orange stolar, hängande lampor och mysig atmosfär i Hammarby Sjöstad"
                   className="w-full h-80 md:h-96 object-cover hover:scale-110 transition-transform duration-700"
                   loading="lazy"
@@ -58,12 +58,12 @@ const About = () => {
                 <span className="text-restaurant-cream text-sm font-medium">Vår mysiga lokal</span>
               </div>
             </div>
-            
+
             {/* Modern Hammarby Building - Below but also larger */}
             <div className="relative group">
               <div className="rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 group-hover:-rotate-1 group-hover:-translate-y-2">
-                <img 
-                  src={hammarbyModernBuilding} 
+                <img
+                  src="https://placehold.co/800x600/1a1a1a/8B7355?text=Hammarby+Sjostad"
                   alt="Modern arkitektur i Hammarby Sjöstad med färgglada fasader och blå himmel"
                   className="w-full h-80 md:h-96 object-cover hover:scale-110 transition-transform duration-700"
                   loading="lazy"
