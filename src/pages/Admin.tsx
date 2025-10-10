@@ -362,7 +362,7 @@ const Admin = () => {
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
       <div className="max-w-6xl mx-auto">
         {/* Fixed Save Button Bar */}
-        <div className="fixed top-4 right-4 z-50 flex gap-4">
+        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center">
           <Button
             onClick={handleSaveChanges}
             disabled={isSaving}
