@@ -1,4 +1,4 @@
-import nollEttanInterior from "@/assets/noll-ettan-interior.webp";
+import nollEttanInterior from "@/assets/noll-ettan-interior-new.png";
 import hammarbyModernBuilding from "@/assets/hammarby-modern-building.png";
 
 const About = () => {
@@ -48,7 +48,7 @@ const About = () => {
             <div className="relative group">
               <div className="rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 group-hover:rotate-1 group-hover:-translate-y-2">
                 <img
-                  src="https://placehold.co/800x600/1a1a1a/8B7355?text=Restaurant+Interior"
+                  src={nollEttanInterior}
                   alt="Noll Ettans moderna interiör med orange stolar, hängande lampor och mysig atmosfär i Hammarby Sjöstad"
                   className="w-full h-80 md:h-96 object-cover hover:scale-110 transition-transform duration-700"
                   loading="lazy"
