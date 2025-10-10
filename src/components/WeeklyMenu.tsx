@@ -102,7 +102,7 @@ const WeeklyMenu = () => {
                 {day.day === "Fredag" && (
                   <div className="bg-restaurant-gold/10 border border-restaurant-gold/30 rounded-xl p-8 mt-8">
                     <h3 className="text-restaurant-gold font-semibold text-xl mb-6 text-center">
-                      Till dagens lunch ingår alltid:
+                      Till lunchmenyn ingår alltid:
                     </h3>
                     <div className="flex flex-wrap justify-center gap-8 sm:gap-12">
                        <div className="flex flex-col items-center gap-4 md:gap-3">
