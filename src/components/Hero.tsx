@@ -58,11 +58,15 @@ const Hero = memo(() => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden ambient-glow pt-32 sm:pt-28 md:pt-24 pb-32 md:pb-24">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="https://placehold.co/1920x1080/1a1a1a/8B7355?text=Noll+Ettan+Restaurant"
-          alt="Restaurant hero background"
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
           className="w-full h-full object-cover"
-        />
+        >
+          <source src="/videos/hero-background.mov" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-br from-restaurant-dark via-restaurant-dark/95 to-black"></div>
       </div>
       
