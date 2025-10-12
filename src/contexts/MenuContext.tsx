@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -78,6 +78,7 @@ interface MenuContextType {
   updateLunchPricing: (pricing: LunchPricing) => void;
   updateWeek: (week: number) => void;
   updateCategoryTexts: (texts: CategoryTexts) => void;
+  isSaving: boolean;
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -368,6 +369,8 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [menuData, setMenuData] = useState<MenuData>(DEFAULT_MENU);
   const [currentMenuId, setCurrentMenuId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimestampRef = useRef<number>(0);
   const { toast } = useToast();
 
   // Fetch menu data from Supabase
@@ -375,13 +378,26 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadMenuFromDatabase();
   }, []);
 
-  // Set up real-time subscriptions with debouncing
+  // Set up real-time subscriptions with debouncing and save prevention
   useEffect(() => {
     if (!currentMenuId) return;
 
     let reloadTimer: NodeJS.Timeout;
 
     const handleDatabaseChange = () => {
+      // Don't reload if we just saved (within 3 seconds)
+      const timeSinceLastSave = Date.now() - saveTimestampRef.current;
+      if (timeSinceLastSave < 3000) {
+        console.log('Skipping reload - recent save detected');
+        return;
+      }
+
+      // Don't reload if currently saving
+      if (isSaving) {
+        console.log('Skipping reload - save in progress');
+        return;
+      }
+
       clearTimeout(reloadTimer);
       // Wait 500ms after last change before reloading to avoid rapid reloads
       reloadTimer = setTimeout(() => {
@@ -429,7 +445,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       clearTimeout(reloadTimer);
       supabase.removeChannel(channel);
     };
-  }, [currentMenuId]);
+  }, [currentMenuId, isSaving]);
 
   const loadMenuFromDatabase = async () => {
     try {
@@ -651,109 +667,148 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const saveToDatabase = async (data: MenuData) => {
     if (!currentMenuId) return;
 
+    const startTime = Date.now();
+    setIsSaving(true);
+    saveTimestampRef.current = Date.now();
+
     try {
-      // Update week number
-      const { error: weekError } = await supabase
-        .from('menu_data')
-        .update({ week: data.week })
-        .eq('id', currentMenuId);
+      // Create a timeout promise (30 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Save operation timed out')), 30000);
+      });
+
+      // Wrap the save operation with timeout
+      await Promise.race([
+        (async () => {
+          // Update week number
+          const { error: weekError } = await supabase
+            .from('menu_data')
+            .update({ week: data.week })
+            .eq('id', currentMenuId);
+          
+          if (weekError) throw weekError;
+
+          // Delete and re-insert operations in parallel for better performance
+          const deleteOps = Promise.all([
+            supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
+            supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
+            supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId),
+            supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId),
+            supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId)
+          ]);
+
+          await deleteOps;
+
+          // Prepare all insert data
+          const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
+            menu_data_id: currentMenuId,
+            day: day.day,
+            meals: day.meals as unknown as any,
+            order_index: index
+          }));
+
+          const menuItemsData = [
+            ...data.alwaysOnMenu.map((item, index) => ({
+              menu_data_id: currentMenuId,
+              category: 'alwaysOnMenu',
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              order_index: index
+            })),
+            ...data.pinsaPizza.map((item, index) => ({
+              menu_data_id: currentMenuId,
+              category: 'pinsaPizza',
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              order_index: index
+            })),
+            ...data.salads.map((item, index) => ({
+              menu_data_id: currentMenuId,
+              category: 'salads',
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              order_index: index
+            })),
+            ...data.pasta.map((item, index) => ({
+              menu_data_id: currentMenuId,
+              category: 'pasta',
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              order_index: index
+            }))
+          ];
+
+          const lunchIncludedData = data.lunchIncluded.map((item, index) => ({
+            menu_data_id: currentMenuId,
+            name: item.name,
+            icon: item.icon,
+            order_index: index
+          }));
+
+          // Execute all inserts in parallel
+          const insertOps = await Promise.all([
+            supabase.from('weekly_lunch').insert(weeklyLunchData),
+            menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null }),
+            lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null }),
+            supabase.from('lunch_pricing').insert({
+              menu_data_id: currentMenuId,
+              on_site: data.lunchPricing.onSite,
+              takeaway: data.lunchPricing.takeaway
+            }),
+            supabase.from('category_texts').insert({
+              menu_data_id: currentMenuId,
+              always_on_title: data.categoryTexts.alwaysOnTitle,
+              always_on_description: data.categoryTexts.alwaysOnDescription,
+              pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
+              pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
+              salads_title: data.categoryTexts.saladsTitle,
+              salads_description: data.categoryTexts.saladsDescription,
+              pasta_title: data.categoryTexts.pastaTitle,
+              pasta_description: data.categoryTexts.pastaDescription
+            })
+          ]);
+
+          // Check for errors in insert operations
+          const errors = insertOps.filter(op => op.error);
+          if (errors.length > 0) {
+            console.error('Insert errors:', errors);
+            throw new Error('Some insert operations failed');
+          }
+
+          const duration = Date.now() - startTime;
+          console.log(`Menu saved successfully in ${duration}ms`);
+        })(),
+        timeoutPromise
+      ]);
       
-      if (weekError) throw weekError;
-
-      // Delete and re-insert operations in parallel for better performance
-      const deleteOps = Promise.all([
-        supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
-        supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
-        supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId),
-        supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId),
-        supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId)
-      ]);
-
-      await deleteOps;
-
-      // Prepare all insert data
-      const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
-        menu_data_id: currentMenuId,
-        day: day.day,
-        meals: day.meals as unknown as any,
-        order_index: index
-      }));
-
-      const menuItemsData = [
-        ...data.alwaysOnMenu.map((item, index) => ({
-          menu_data_id: currentMenuId,
-          category: 'alwaysOnMenu',
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          order_index: index
-        })),
-        ...data.pinsaPizza.map((item, index) => ({
-          menu_data_id: currentMenuId,
-          category: 'pinsaPizza',
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          order_index: index
-        })),
-        ...data.salads.map((item, index) => ({
-          menu_data_id: currentMenuId,
-          category: 'salads',
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          order_index: index
-        })),
-        ...data.pasta.map((item, index) => ({
-          menu_data_id: currentMenuId,
-          category: 'pasta',
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          order_index: index
-        }))
-      ];
-
-      const lunchIncludedData = data.lunchIncluded.map((item, index) => ({
-        menu_data_id: currentMenuId,
-        name: item.name,
-        icon: item.icon,
-        order_index: index
-      }));
-
-      // Execute all inserts in parallel
-      const insertOps = await Promise.all([
-        supabase.from('weekly_lunch').insert(weeklyLunchData),
-        menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null }),
-        lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null }),
-        supabase.from('lunch_pricing').insert({
-          menu_data_id: currentMenuId,
-          on_site: data.lunchPricing.onSite,
-          takeaway: data.lunchPricing.takeaway
-        }),
-        supabase.from('category_texts').insert({
-          menu_data_id: currentMenuId,
-          always_on_title: data.categoryTexts.alwaysOnTitle,
-          always_on_description: data.categoryTexts.alwaysOnDescription,
-          pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
-          pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
-          salads_title: data.categoryTexts.saladsTitle,
-          salads_description: data.categoryTexts.saladsDescription,
-          pasta_title: data.categoryTexts.pastaTitle,
-          pasta_description: data.categoryTexts.pastaDescription
-        })
-      ]);
-
-      // Check for errors in insert operations
-      const errors = insertOps.filter(op => op.error);
-      if (errors.length > 0) {
-        throw new Error('Some insert operations failed');
+      toast({
+        title: "Sparad!",
+        description: "Menyn har uppdaterats.",
+      });
+    } catch (error: any) {
+      const duration = Date.now() - startTime;
+      console.error(`Error saving to database after ${duration}ms:`, error);
+      
+      if (error.message === 'Save operation timed out') {
+        toast({
+          title: "Timeout",
+          description: "Sparningen tog för lång tid. Försök igen eller kontakta support om problemet kvarstår.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Fel",
+          description: "Kunde inte spara menyn. Försök igen.",
+          variant: "destructive"
+        });
       }
-
-      console.log('Menu saved successfully');
-    } catch (error) {
-      console.error('Error saving to database:', error);
       throw error;
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -916,7 +971,8 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       deleteLunchIncludedItem: deleteLunchIncluded,
       updateLunchPricing,
       updateWeek,
-      updateCategoryTexts
+      updateCategoryTexts,
+      isSaving
     }}>
       {children}
     </MenuContext.Provider>

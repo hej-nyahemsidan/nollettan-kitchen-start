@@ -41,29 +41,25 @@ const Admin = () => {
     deleteLunchIncludedItem,
     updateLunchPricing,
     updateWeek,
-    updateCategoryTexts
+    updateCategoryTexts,
+    isSaving
   } = useMenu();
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveChanges = async () => {
-    if (isSaving) return; // Prevent multiple simultaneous saves
+    if (isSaving) {
+      toast({
+        title: "Sparar redan",
+        description: "Vänligen vänta medan den nuvarande sparningen slutförs.",
+      });
+      return;
+    }
     
-    setIsSaving(true);
     try {
       await saveMenuData();
-      toast({
-        title: "Sparat!",
-        description: "Alla ändringar har sparats i databasen.",
-      });
     } catch (error) {
-      toast({
-        title: "Fel",
-        description: "Kunde inte spara ändringarna. Försök igen.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
+      // Error is already handled in MenuContext with toast
+      console.error('Save failed:', error);
     }
   };
 
