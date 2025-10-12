@@ -664,31 +664,27 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const saveToDatabase = async (data: MenuData) => {
+  const saveToDatabase = async (data: MenuData, options?: { timeoutMs?: number; silent?: boolean }) => {
     if (!currentMenuId) return;
 
+    const { timeoutMs = 20000, silent = false } = options || {};
     const startTime = Date.now();
     setIsSaving(true);
     saveTimestampRef.current = Date.now();
 
     try {
-      // Create a timeout promise (30 seconds)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Save operation timed out')), 30000);
+        setTimeout(() => reject(new Error('Save operation timed out')), timeoutMs);
       });
 
-      // Wrap the save operation with timeout
       await Promise.race([
         (async () => {
-          // Update week number
           const { error: weekError } = await supabase
             .from('menu_data')
             .update({ week: data.week })
             .eq('id', currentMenuId);
-          
           if (weekError) throw weekError;
 
-          // Delete and re-insert operations in parallel for better performance
           const deleteOps = Promise.all([
             supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
             supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
@@ -696,10 +692,8 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId),
             supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId)
           ]);
-
           await deleteOps;
 
-          // Prepare all insert data
           const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
             menu_data_id: currentMenuId,
             day: day.day,
@@ -749,11 +743,10 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             order_index: index
           }));
 
-          // Execute all inserts in parallel
           const insertOps = await Promise.all([
             supabase.from('weekly_lunch').insert(weeklyLunchData),
-            menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null }),
-            lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null }),
+            menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null } as any),
+            lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null } as any),
             supabase.from('lunch_pricing').insert({
               menu_data_id: currentMenuId,
               on_site: data.lunchPricing.onSite,
@@ -772,8 +765,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             })
           ]);
 
-          // Check for errors in insert operations
-          const errors = insertOps.filter(op => op.error);
+          const errors = insertOps.filter((op: any) => op.error);
           if (errors.length > 0) {
             console.error('Insert errors:', errors);
             throw new Error('Some insert operations failed');
@@ -784,27 +776,31 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         })(),
         timeoutPromise
       ]);
-      
-      toast({
-        title: "Sparad!",
-        description: "Menyn har uppdaterats.",
-      });
+
+      if (!silent) {
+        toast({
+          title: 'Sparad!',
+          description: 'Menyn har uppdaterats.',
+        });
+      }
     } catch (error: any) {
       const duration = Date.now() - startTime;
       console.error(`Error saving to database after ${duration}ms:`, error);
-      
-      if (error.message === 'Save operation timed out') {
-        toast({
-          title: "Timeout",
-          description: "Sparningen tog för lång tid. Försök igen eller kontakta support om problemet kvarstår.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Fel",
-          description: "Kunde inte spara menyn. Försök igen.",
-          variant: "destructive"
-        });
+
+      if (!silent) {
+        if (error.message === 'Save operation timed out') {
+          toast({
+            title: 'Timeout',
+            description: 'Sparningen tog för lång tid. Försök igen.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Fel',
+            description: 'Kunde inte spara menyn. Försök igen.',
+            variant: 'destructive'
+          });
+        }
       }
       throw error;
     } finally {
@@ -818,7 +814,26 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const saveMenuData = async () => {
-    await saveToDatabase(menuData);
+    // Show a persistent toast we can update
+    const saving = toast({ title: 'Sparar...', description: 'Skickar ändringar' });
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await saveToDatabase(menuData, { timeoutMs: 20000, silent: true });
+        saving.update({ id: saving.id, title: 'Sparat!', description: 'Menyn har uppdaterats.' });
+        setTimeout(() => saving.dismiss(), 1500);
+        return;
+      } catch (err) {
+        if (attempt < maxAttempts) {
+          saving.update({ id: saving.id, title: 'Misslyckades - försöker igen', description: `Försök ${attempt + 1} av ${maxAttempts}...` });
+          await new Promise((res) => setTimeout(res, attempt * 800));
+        } else {
+          saving.update({ id: saving.id, title: 'Misslyckades', description: 'Kunde inte spara. Försök igen.' });
+          // Keep toast visible so user can see the result
+          throw err as any;
+        }
+      }
+    }
   };
 
   const updateDayMenu = (dayIndex: number, meals: WeeklyMeal[]) => {

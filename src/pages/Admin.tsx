@@ -19,6 +19,7 @@ const Admin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastSaveFailed, setLastSaveFailed] = useState(false);
   const { 
     menuData, 
     updateMenuData, 
@@ -54,12 +55,14 @@ const Admin = () => {
       });
       return;
     }
-    
+    setLastSaveFailed(false);
     try {
       await saveMenuData();
+      setLastSaveFailed(false);
     } catch (error) {
       // Error is already handled in MenuContext with toast
       console.error('Save failed:', error);
+      setLastSaveFailed(true);
     }
   };
 
@@ -1062,7 +1065,7 @@ const Admin = () => {
             size="lg"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isSaving ? "Sparar..." : "Spara ändringar"}
+            {isSaving ? "Sparar..." : lastSaveFailed ? "Försök igen" : "Spara ändringar"}
           </Button>
         </div>
       </div>
