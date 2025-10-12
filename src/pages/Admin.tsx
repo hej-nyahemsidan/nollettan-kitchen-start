@@ -361,18 +361,6 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
       <div className="max-w-6xl mx-auto">
-        {/* Fixed Save Button Bar */}
-        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center">
-          <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-            className="bg-restaurant-gold text-restaurant-dark hover:bg-restaurant-gold/90 shadow-lg"
-            size="lg"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? "Sparar..." : "Spara ändringar"}
-          </Button>
-        </div>
 
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
@@ -384,22 +372,14 @@ const Admin = () => {
               <ArrowLeft className="w-4 h-4" />
               Tillbaka till hemsidan
             </Button>
-            <h1 className="text-4xl font-heading text-restaurant-gold">Menu Administration</h1>
+            <h1 className="text-4xl font-heading text-restaurant-gold">Meny Administration</h1>
           </div>
-          <div className="flex gap-4">
-            <Button
-              variant={previewMode ? "secondary" : "outline"}
-              onClick={() => setPreviewMode(!previewMode)}
-            >
-              {previewMode ? "Redigera" : "Förhandsgranska"}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-            >
-              Logga ut
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+          >
+            Logga ut
+          </Button>
         </div>
 
         {/* Week Number */}
