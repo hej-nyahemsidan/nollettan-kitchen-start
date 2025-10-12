@@ -375,9 +375,20 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadMenuFromDatabase();
   }, []);
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions with debouncing
   useEffect(() => {
     if (!currentMenuId) return;
+
+    let reloadTimer: NodeJS.Timeout;
+
+    const handleDatabaseChange = () => {
+      clearTimeout(reloadTimer);
+      // Wait 500ms after last change before reloading to avoid rapid reloads
+      reloadTimer = setTimeout(() => {
+        console.log('Database changed, reloading menu...');
+        loadMenuFromDatabase();
+      }, 500);
+    };
 
     const channel = supabase
       .channel('menu-changes')
@@ -386,47 +397,36 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         schema: 'public',
         table: 'menu_data',
         filter: `id=eq.${currentMenuId}`
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'weekly_lunch'
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'menu_items'
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'lunch_included'
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'lunch_pricing'
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'category_texts'
-      }, () => {
-        loadMenuFromDatabase();
-      })
+      }, handleDatabaseChange)
       .subscribe();
 
     return () => {
+      clearTimeout(reloadTimer);
       supabase.removeChannel(channel);
     };
   }, [currentMenuId]);
@@ -652,24 +652,33 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentMenuId) return;
 
     try {
-      // Update menu_data
-      await supabase
+      // Update week number
+      const { error: weekError } = await supabase
         .from('menu_data')
         .update({ week: data.week })
         .eq('id', currentMenuId);
+      
+      if (weekError) throw weekError;
 
-      // Update weekly lunch
-      await supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId);
+      // Delete and re-insert operations in parallel for better performance
+      const deleteOps = Promise.all([
+        supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
+        supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
+        supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId),
+        supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId),
+        supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId)
+      ]);
+
+      await deleteOps;
+
+      // Prepare all insert data
       const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
         menu_data_id: currentMenuId,
         day: day.day,
         meals: day.meals as unknown as any,
         order_index: index
       }));
-      await supabase.from('weekly_lunch').insert(weeklyLunchData);
 
-      // Update menu items
-      await supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId);
       const menuItemsData = [
         ...data.alwaysOnMenu.map((item, index) => ({
           menu_data_id: currentMenuId,
@@ -704,51 +713,47 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           order_index: index
         }))
       ];
-      await supabase.from('menu_items').insert(menuItemsData);
 
-      // Update lunch included
-      await supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId);
       const lunchIncludedData = data.lunchIncluded.map((item, index) => ({
         menu_data_id: currentMenuId,
         name: item.name,
         icon: item.icon,
         order_index: index
       }));
-      await supabase.from('lunch_included').insert(lunchIncludedData);
 
-      // Update lunch pricing
-      await supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId);
-      await supabase.from('lunch_pricing').insert({
-        menu_data_id: currentMenuId,
-        on_site: data.lunchPricing.onSite,
-        takeaway: data.lunchPricing.takeaway
-      });
+      // Execute all inserts in parallel
+      const insertOps = await Promise.all([
+        supabase.from('weekly_lunch').insert(weeklyLunchData),
+        menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null }),
+        lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null }),
+        supabase.from('lunch_pricing').insert({
+          menu_data_id: currentMenuId,
+          on_site: data.lunchPricing.onSite,
+          takeaway: data.lunchPricing.takeaway
+        }),
+        supabase.from('category_texts').insert({
+          menu_data_id: currentMenuId,
+          always_on_title: data.categoryTexts.alwaysOnTitle,
+          always_on_description: data.categoryTexts.alwaysOnDescription,
+          pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
+          pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
+          salads_title: data.categoryTexts.saladsTitle,
+          salads_description: data.categoryTexts.saladsDescription,
+          pasta_title: data.categoryTexts.pastaTitle,
+          pasta_description: data.categoryTexts.pastaDescription
+        })
+      ]);
 
-      // Update category texts
-      await supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId);
-      await supabase.from('category_texts').insert({
-        menu_data_id: currentMenuId,
-        always_on_title: data.categoryTexts.alwaysOnTitle,
-        always_on_description: data.categoryTexts.alwaysOnDescription,
-        pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
-        pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
-        salads_title: data.categoryTexts.saladsTitle,
-        salads_description: data.categoryTexts.saladsDescription,
-        pasta_title: data.categoryTexts.pastaTitle,
-        pasta_description: data.categoryTexts.pastaDescription
-      });
+      // Check for errors in insert operations
+      const errors = insertOps.filter(op => op.error);
+      if (errors.length > 0) {
+        throw new Error('Some insert operations failed');
+      }
 
-      toast({
-        title: "Sparat!",
-        description: "Menyändringar sparade i databasen",
-      });
+      console.log('Menu saved successfully');
     } catch (error) {
       console.error('Error saving to database:', error);
-      toast({
-        title: "Error",
-        description: "Kunde inte spara ändringarna",
-        variant: "destructive"
-      });
+      throw error;
     }
   };
 

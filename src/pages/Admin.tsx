@@ -47,6 +47,8 @@ const Admin = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveChanges = async () => {
+    if (isSaving) return; // Prevent multiple simultaneous saves
+    
     setIsSaving(true);
     try {
       await saveMenuData();
@@ -360,6 +362,18 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
+      {/* Loading Overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-restaurant-dark p-8 rounded-lg shadow-xl border border-restaurant-gold/20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-restaurant-gold"></div>
+              <p className="text-restaurant-gold text-lg">Sparar ändringar...</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-6xl mx-auto">
 
         <div className="flex justify-between items-center mb-8">
@@ -1044,18 +1058,15 @@ const Admin = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center pb-8">
           <Button 
-            onClick={() => {
-              toast({
-                title: "Sparad!",
-                description: "Menyn har uppdaterats och syns nu på webbplatsen.",
-              });
-            }}
+            onClick={handleSaveChanges}
+            disabled={isSaving}
             className="bg-restaurant-gold text-restaurant-dark hover:bg-restaurant-gold/90"
+            size="lg"
           >
             <Save className="w-4 h-4 mr-2" />
-            Spara ändringar
+            {isSaving ? "Sparar..." : "Spara ändringar"}
           </Button>
         </div>
       </div>
