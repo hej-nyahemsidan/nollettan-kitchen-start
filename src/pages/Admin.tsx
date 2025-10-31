@@ -198,13 +198,22 @@ const Admin = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setEmail('');
-    setPassword('');
-    toast({
-      title: "Utloggad",
-      description: "Du har loggats ut från admin-panelen.",
-    });
+    try {
+      await supabase.auth.signOut();
+      setIsAuthenticated(false);
+      setEmail('');
+      setPassword('');
+      toast({
+        title: "Utloggad",
+        description: "Du har loggats ut från admin-panelen.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if there's an error
+      setIsAuthenticated(false);
+      setEmail('');
+      setPassword('');
+    }
   };
 
   const handleAddMeal = (dayIndex: number) => {
