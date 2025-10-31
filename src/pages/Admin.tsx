@@ -108,15 +108,26 @@ const Admin = () => {
     checkAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .single();
-        setIsAuthenticated(!!roles);
+        // Optimistic update, then verify role in next tick to avoid deadlocks
+        setIsAuthenticated(true);
+        setTimeout(async () => {
+          try {
+            const { data: roles } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .eq('role', 'admin')
+              .single();
+            setIsAuthenticated(!!roles);
+            if (!roles) {
+              await supabase.auth.signOut();
+            }
+          } catch (e) {
+            console.error('Role check failed in auth listener:', e);
+          }
+        }, 0);
       } else {
         setIsAuthenticated(false);
       }

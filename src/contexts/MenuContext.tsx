@@ -876,7 +876,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (error.message === 'TIMEOUT') {
           errorTitle = 'Timeout';
-          errorDescription = 'Sparningen tog för lång tid (>20s). Försök igen.';
+          errorDescription = 'Sparningen tog för lång tid (>60s). Försök igen.';
         } else if (error.message === 'SESSION_EXPIRED') {
           errorTitle = 'Session utgången';
           errorDescription = 'Din session har löpt ut. Logga in igen.';
