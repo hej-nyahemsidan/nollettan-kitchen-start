@@ -910,42 +910,73 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const saveMenuData = async () => {
-    // PHASE 2: Enhanced retry logic with progress tracking and session refresh
+    // Global hard cap so saving can't run indefinitely
+    const overallTimeoutMs = 75000; // 75s total cap
+    const startOverall = Date.now();
+
     const maxAttempts = 3;
     let toastController: { id: string; dismiss: () => void; update: (props: any) => void } | null = null;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        // Show initial toast or update existing one
-        if (attempt === 1) {
-          toastController = toast({ 
-            title: 'Sparar...', 
-            description: 'Förbereder sparning...'
+      // Calculate remaining budget for this attempt
+      const elapsed = Date.now() - startOverall;
+      let remainingBudget = overallTimeoutMs - elapsed;
+
+      if (remainingBudget <= 0) {
+        if (toastController) {
+          toastController.update({
+            id: toastController.id,
+            title: 'Timeout',
+            description: 'Sparningen stoppades efter 75 sekunder.',
+            variant: 'destructive'
           });
         } else {
-          // Session refresh before retry
-          const { error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            console.warn(`[SaveMenuData] Session refresh failed on attempt ${attempt}:`, refreshError);
-          } else {
-            console.log(`[SaveMenuData] Session refreshed before attempt ${attempt}`);
-          }
-          
-          if (toastController) {
-            toastController.update({ 
-              id: toastController.id,
-              title: 'Försöker igen...', 
-              description: `Försök ${attempt} av ${maxAttempts}` 
-            });
-          }
-          
-          // Exponential backoff: 1s, 2s, 4s
-          await new Promise((res) => setTimeout(res, Math.pow(2, attempt - 1) * 1000));
+          toast({ title: 'Timeout', description: 'Sparningen stoppades efter 75 sekunder.', variant: 'destructive' });
+        }
+        throw new Error('GLOBAL_TIMEOUT');
+      }
+
+      // Show initial toast or update existing one
+      if (attempt === 1) {
+        toastController = toast({ 
+          title: 'Sparar...', 
+          description: 'Förbereder sparning...'
+        });
+      } else {
+        // Session refresh before retry
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.warn(`[SaveMenuData] Session refresh failed on attempt ${attempt}:`, refreshError);
+        } else {
+          console.log(`[SaveMenuData] Session refreshed before attempt ${attempt}`);
         }
 
-        // Attempt save with progress callback
+        toastController?.update({ 
+          id: toastController.id,
+          title: 'Försöker igen...', 
+          description: `Försök ${attempt} av ${maxAttempts}` 
+        });
+
+        // Exponential backoff but do not exceed remaining budget
+        const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+        remainingBudget = overallTimeoutMs - (Date.now() - startOverall);
+        if (remainingBudget <= 0) {
+          toastController?.update({ id: toastController.id, title: 'Timeout', description: 'Sparningen stoppades efter 75 sekunder.', variant: 'destructive' });
+          throw new Error('GLOBAL_TIMEOUT');
+        }
+        const sleepMs = Math.min(backoffMs, Math.max(0, remainingBudget - 1000));
+        if (sleepMs > 0) {
+          await new Promise((res) => setTimeout(res, sleepMs));
+        }
+      }
+
+      try {
+        // Recompute remaining budget right before attempting
+        const remainingForAttempt = Math.max(3000, overallTimeoutMs - (Date.now() - startOverall));
+
+        // Attempt save with progress callback and per-attempt timeout bound to remaining budget
         await saveToDatabase(menuData, { 
-          timeoutMs: 60000, 
+          timeoutMs: Math.min(60000, remainingForAttempt), 
           silent: true,
           onProgress: (step) => {
             if (toastController) {
@@ -959,55 +990,51 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         
         // Success!
-        if (toastController) {
-          toastController.update({ 
-            id: toastController.id,
-            title: 'Sparat!', 
-            description: 'Menyn har uppdaterats.' 
-          });
-          setTimeout(() => toastController?.dismiss(), 2000);
-        }
+        toastController?.update({ 
+          id: toastController.id,
+          title: 'Sparat!', 
+          description: 'Menyn har uppdaterats.' 
+        });
+        setTimeout(() => toastController?.dismiss(), 2000);
         return;
       } catch (err: any) {
         console.error(`[SaveMenuData] Attempt ${attempt} failed:`, err);
         
         // Don't retry on permission errors
         if (err?.message === 'SESSION_EXPIRED' || err?.message === 'NOT_ADMIN') {
-          if (toastController) {
-            toastController.update({ 
-              id: toastController.id,
-              title: 'Session utgången', 
-              description: 'Loggar ut och dirigerar till inloggning...',
-              variant: 'destructive'
-            });
-          }
+          toastController?.update({ 
+            id: toastController.id,
+            title: 'Session utgången', 
+            description: 'Loggar ut och dirigerar till inloggning...',
+            variant: 'destructive'
+          });
+          throw err;
+        }
+
+        // Global timeout reached
+        if (err?.message === 'GLOBAL_TIMEOUT') {
           throw err;
         }
         
         if (attempt < maxAttempts) {
-          if (toastController) {
-            toastController.update({ 
-              id: toastController.id,
-              title: 'Misslyckades - försöker igen', 
-              description: `Väntar innan försök ${attempt + 1} av ${maxAttempts}...` 
-            });
-          }
+          toastController?.update({ 
+            id: toastController.id,
+            title: 'Misslyckades - försöker igen', 
+            description: `Väntar innan försök ${attempt + 1} av ${maxAttempts}...` 
+          });
         } else {
           // Final attempt failed
-          if (toastController) {
-            toastController.update({ 
-              id: toastController.id,
-              title: 'Misslyckades', 
-              description: 'Kunde inte spara efter 3 försök. Kontrollera din anslutning och försök igen.',
-              variant: 'destructive'
-            });
-          }
+          toastController?.update({ 
+            id: toastController.id,
+            title: 'Misslyckades', 
+            description: 'Kunde inte spara efter 3 försök. Kontrollera din anslutning och försök igen.',
+            variant: 'destructive'
+          });
           throw err;
         }
       }
     }
   };
-
   const updateDayMenu = (dayIndex: number, meals: WeeklyMeal[]) => {
     const updatedData = {
       ...menuData,
