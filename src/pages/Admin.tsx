@@ -57,12 +57,7 @@ const Admin = () => {
     }
     setLastSaveFailed(false);
     try {
-      // PHASE 1 FIX: Refresh session before save to prevent session expiry issues
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.warn('[Admin] Session refresh failed:', refreshError);
-      }
-      
+      // PHASE 2: Session refresh is now handled inside saveMenuData retry logic
       await saveMenuData();
       setLastSaveFailed(false);
       
@@ -80,7 +75,7 @@ const Admin = () => {
           });
           supabase.auth.signOut();
           setIsAuthenticated(false);
-        }, 2000);
+        }, 3000);
       }
     }
   };

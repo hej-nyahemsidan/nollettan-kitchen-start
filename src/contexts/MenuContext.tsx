@@ -664,12 +664,12 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const saveToDatabase = async (data: MenuData, options?: { timeoutMs?: number; silent?: boolean }) => {
+  const saveToDatabase = async (data: MenuData, options?: { timeoutMs?: number; silent?: boolean; onProgress?: (step: string) => void }) => {
     if (!currentMenuId) {
       throw new Error('No menu ID found');
     }
 
-    const { timeoutMs = 20000, silent = false } = options || {};
+    const { timeoutMs = 60000, silent = false, onProgress } = options || {}; // PHASE 2: Increased to 60s
     const startTime = Date.now();
     setIsSaving(true);
     saveTimestampRef.current = Date.now();
@@ -714,6 +714,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         (async () => {
           // Update week number
           console.log('[SaveDB] Updating week number...');
+          onProgress?.('Uppdaterar veckonummer...');
           const { error: weekError } = await supabase
             .from('menu_data')
             .update({ week: data.week })
@@ -724,8 +725,9 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             throw new Error(`WEEK_UPDATE_FAILED: ${weekError.message}`);
           }
 
-          // PHASE 1 FIX: Transaction Safety - Delete old data
+          // PHASE 2: Delete old data with progress tracking
           console.log('[SaveDB] Deleting old data...');
+          onProgress?.('Tar bort gammal data...');
           const deleteResults = await Promise.all([
             supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
             supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
@@ -792,8 +794,9 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             order_index: index
           }));
 
-          // PHASE 1 FIX: Better Error Logging - Insert new data with detailed logging
+          // PHASE 2: Insert new data with progress tracking
           console.log('[SaveDB] Inserting weekly lunch...');
+          onProgress?.('Sparar veckomeny (1/5)...');
           const weeklyLunchResult = await supabase.from('weekly_lunch').insert(weeklyLunchData);
           if (weeklyLunchResult.error) {
             console.error('[SaveDB] Weekly lunch insert failed:', weeklyLunchResult.error);
@@ -801,6 +804,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           console.log('[SaveDB] Inserting menu items...');
+          onProgress?.('Sparar menyalternativ (2/5)...');
           const menuItemsResult = menuItemsData.length > 0 
             ? await supabase.from('menu_items').insert(menuItemsData)
             : { error: null };
@@ -810,6 +814,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           console.log('[SaveDB] Inserting lunch included...');
+          onProgress?.('Sparar lunch-tillbehör (3/5)...');
           const lunchIncludedResult = lunchIncludedData.length > 0
             ? await supabase.from('lunch_included').insert(lunchIncludedData)
             : { error: null };
@@ -819,6 +824,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           console.log('[SaveDB] Inserting lunch pricing...');
+          onProgress?.('Sparar priser (4/5)...');
           const pricingResult = await supabase.from('lunch_pricing').insert({
             menu_data_id: currentMenuId,
             on_site: data.lunchPricing.onSite,
@@ -830,6 +836,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           console.log('[SaveDB] Inserting category texts...');
+          onProgress?.('Sparar kategoritexter (5/5)...');
           const categoryResult = await supabase.from('category_texts').insert({
             menu_data_id: currentMenuId,
             always_on_title: data.categoryTexts.alwaysOnTitle,
@@ -903,23 +910,99 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const saveMenuData = async () => {
-    // Show a persistent toast we can update
-    const saving = toast({ title: 'Sparar...', description: 'Skickar ändringar' });
+    // PHASE 2: Enhanced retry logic with progress tracking and session refresh
     const maxAttempts = 3;
+    let toastController: { id: string; dismiss: () => void; update: (props: any) => void } | null = null;
+    
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await saveToDatabase(menuData, { timeoutMs: 20000, silent: true });
-        saving.update({ id: saving.id, title: 'Sparat!', description: 'Menyn har uppdaterats.' });
-        setTimeout(() => saving.dismiss(), 1500);
-        return;
-      } catch (err) {
-        if (attempt < maxAttempts) {
-          saving.update({ id: saving.id, title: 'Misslyckades - försöker igen', description: `Försök ${attempt + 1} av ${maxAttempts}...` });
-          await new Promise((res) => setTimeout(res, attempt * 800));
+        // Show initial toast or update existing one
+        if (attempt === 1) {
+          toastController = toast({ 
+            title: 'Sparar...', 
+            description: 'Förbereder sparning...'
+          });
         } else {
-          saving.update({ id: saving.id, title: 'Misslyckades', description: 'Kunde inte spara. Försök igen.' });
-          // Keep toast visible so user can see the result
-          throw err as any;
+          // Session refresh before retry
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.warn(`[SaveMenuData] Session refresh failed on attempt ${attempt}:`, refreshError);
+          } else {
+            console.log(`[SaveMenuData] Session refreshed before attempt ${attempt}`);
+          }
+          
+          if (toastController) {
+            toastController.update({ 
+              id: toastController.id,
+              title: 'Försöker igen...', 
+              description: `Försök ${attempt} av ${maxAttempts}` 
+            });
+          }
+          
+          // Exponential backoff: 1s, 2s, 4s
+          await new Promise((res) => setTimeout(res, Math.pow(2, attempt - 1) * 1000));
+        }
+
+        // Attempt save with progress callback
+        await saveToDatabase(menuData, { 
+          timeoutMs: 60000, 
+          silent: true,
+          onProgress: (step) => {
+            if (toastController) {
+              toastController.update({ 
+                id: toastController.id,
+                title: 'Sparar...', 
+                description: step 
+              });
+            }
+          }
+        });
+        
+        // Success!
+        if (toastController) {
+          toastController.update({ 
+            id: toastController.id,
+            title: 'Sparat!', 
+            description: 'Menyn har uppdaterats.' 
+          });
+          setTimeout(() => toastController?.dismiss(), 2000);
+        }
+        return;
+      } catch (err: any) {
+        console.error(`[SaveMenuData] Attempt ${attempt} failed:`, err);
+        
+        // Don't retry on permission errors
+        if (err?.message === 'SESSION_EXPIRED' || err?.message === 'NOT_ADMIN') {
+          if (toastController) {
+            toastController.update({ 
+              id: toastController.id,
+              title: 'Session utgången', 
+              description: 'Loggar ut och dirigerar till inloggning...',
+              variant: 'destructive'
+            });
+          }
+          throw err;
+        }
+        
+        if (attempt < maxAttempts) {
+          if (toastController) {
+            toastController.update({ 
+              id: toastController.id,
+              title: 'Misslyckades - försöker igen', 
+              description: `Väntar innan försök ${attempt + 1} av ${maxAttempts}...` 
+            });
+          }
+        } else {
+          // Final attempt failed
+          if (toastController) {
+            toastController.update({ 
+              id: toastController.id,
+              title: 'Misslyckades', 
+              description: 'Kunde inte spara efter 3 försök. Kontrollera din anslutning och försök igen.',
+              variant: 'destructive'
+            });
+          }
+          throw err;
         }
       }
     }
