@@ -57,12 +57,31 @@ const Admin = () => {
     }
     setLastSaveFailed(false);
     try {
+      // PHASE 1 FIX: Refresh session before save to prevent session expiry issues
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.warn('[Admin] Session refresh failed:', refreshError);
+      }
+      
       await saveMenuData();
       setLastSaveFailed(false);
-    } catch (error) {
-      // Error is already handled in MenuContext with toast
-      console.error('Save failed:', error);
+      
+      console.log('[Admin] Save completed successfully');
+    } catch (error: any) {
+      console.error('[Admin] Save failed:', error);
       setLastSaveFailed(true);
+      
+      // If session expired, redirect to login
+      if (error?.message === 'SESSION_EXPIRED' || error?.message === 'NOT_ADMIN') {
+        setTimeout(() => {
+          toast({
+            title: "Omdirigerar...",
+            description: "Loggar ut på grund av session utgången.",
+          });
+          supabase.auth.signOut();
+          setIsAuthenticated(false);
+        }, 2000);
+      }
     }
   };
 

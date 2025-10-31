@@ -665,7 +665,9 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const saveToDatabase = async (data: MenuData, options?: { timeoutMs?: number; silent?: boolean }) => {
-    if (!currentMenuId) return;
+    if (!currentMenuId) {
+      throw new Error('No menu ID found');
+    }
 
     const { timeoutMs = 20000, silent = false } = options || {};
     const startTime = Date.now();
@@ -673,27 +675,74 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     saveTimestampRef.current = Date.now();
 
     try {
+      // PHASE 1 FIX: Explicit Permission Checking
+      console.log('[SaveDB] Starting save operation...');
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('[SaveDB] No active session:', sessionError);
+        throw new Error('SESSION_EXPIRED');
+      }
+
+      console.log('[SaveDB] Session valid, checking admin permissions...');
+      
+      const { data: adminRole, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('[SaveDB] Error checking admin role:', roleError);
+        throw new Error('PERMISSION_CHECK_FAILED');
+      }
+
+      if (!adminRole) {
+        console.error('[SaveDB] User is not admin');
+        throw new Error('NOT_ADMIN');
+      }
+
+      console.log('[SaveDB] Permissions verified, proceeding with save...');
+
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Save operation timed out')), timeoutMs);
+        setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs);
       });
 
       await Promise.race([
         (async () => {
+          // Update week number
+          console.log('[SaveDB] Updating week number...');
           const { error: weekError } = await supabase
             .from('menu_data')
             .update({ week: data.week })
             .eq('id', currentMenuId);
-          if (weekError) throw weekError;
+          
+          if (weekError) {
+            console.error('[SaveDB] Week update failed:', weekError);
+            throw new Error(`WEEK_UPDATE_FAILED: ${weekError.message}`);
+          }
 
-          const deleteOps = Promise.all([
+          // PHASE 1 FIX: Transaction Safety - Delete old data
+          console.log('[SaveDB] Deleting old data...');
+          const deleteResults = await Promise.all([
             supabase.from('weekly_lunch').delete().eq('menu_data_id', currentMenuId),
             supabase.from('menu_items').delete().eq('menu_data_id', currentMenuId),
             supabase.from('lunch_included').delete().eq('menu_data_id', currentMenuId),
             supabase.from('lunch_pricing').delete().eq('menu_data_id', currentMenuId),
             supabase.from('category_texts').delete().eq('menu_data_id', currentMenuId)
           ]);
-          await deleteOps;
 
+          // Check for delete errors
+          const deleteErrors = deleteResults.filter(r => r.error);
+          if (deleteErrors.length > 0) {
+            console.error('[SaveDB] Delete operations failed:', deleteErrors);
+            throw new Error(`DELETE_FAILED: ${deleteErrors.map(e => e.error?.message).join(', ')}`);
+          }
+
+          // Prepare insert data
+          console.log('[SaveDB] Preparing insert data...');
           const weeklyLunchData = data.weeklyLunch.map((day, index) => ({
             menu_data_id: currentMenuId,
             day: day.day,
@@ -743,36 +792,62 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             order_index: index
           }));
 
-          const insertOps = await Promise.all([
-            supabase.from('weekly_lunch').insert(weeklyLunchData),
-            menuItemsData.length > 0 ? supabase.from('menu_items').insert(menuItemsData) : Promise.resolve({ error: null } as any),
-            lunchIncludedData.length > 0 ? supabase.from('lunch_included').insert(lunchIncludedData) : Promise.resolve({ error: null } as any),
-            supabase.from('lunch_pricing').insert({
-              menu_data_id: currentMenuId,
-              on_site: data.lunchPricing.onSite,
-              takeaway: data.lunchPricing.takeaway
-            }),
-            supabase.from('category_texts').insert({
-              menu_data_id: currentMenuId,
-              always_on_title: data.categoryTexts.alwaysOnTitle,
-              always_on_description: data.categoryTexts.alwaysOnDescription,
-              pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
-              pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
-              salads_title: data.categoryTexts.saladsTitle,
-              salads_description: data.categoryTexts.saladsDescription,
-              pasta_title: data.categoryTexts.pastaTitle,
-              pasta_description: data.categoryTexts.pastaDescription
-            })
-          ]);
+          // PHASE 1 FIX: Better Error Logging - Insert new data with detailed logging
+          console.log('[SaveDB] Inserting weekly lunch...');
+          const weeklyLunchResult = await supabase.from('weekly_lunch').insert(weeklyLunchData);
+          if (weeklyLunchResult.error) {
+            console.error('[SaveDB] Weekly lunch insert failed:', weeklyLunchResult.error);
+            throw new Error(`WEEKLY_LUNCH_INSERT_FAILED: ${weeklyLunchResult.error.message}`);
+          }
 
-          const errors = insertOps.filter((op: any) => op.error);
-          if (errors.length > 0) {
-            console.error('Insert errors:', errors);
-            throw new Error('Some insert operations failed');
+          console.log('[SaveDB] Inserting menu items...');
+          const menuItemsResult = menuItemsData.length > 0 
+            ? await supabase.from('menu_items').insert(menuItemsData)
+            : { error: null };
+          if (menuItemsResult.error) {
+            console.error('[SaveDB] Menu items insert failed:', menuItemsResult.error);
+            throw new Error(`MENU_ITEMS_INSERT_FAILED: ${menuItemsResult.error.message}`);
+          }
+
+          console.log('[SaveDB] Inserting lunch included...');
+          const lunchIncludedResult = lunchIncludedData.length > 0
+            ? await supabase.from('lunch_included').insert(lunchIncludedData)
+            : { error: null };
+          if (lunchIncludedResult.error) {
+            console.error('[SaveDB] Lunch included insert failed:', lunchIncludedResult.error);
+            throw new Error(`LUNCH_INCLUDED_INSERT_FAILED: ${lunchIncludedResult.error.message}`);
+          }
+
+          console.log('[SaveDB] Inserting lunch pricing...');
+          const pricingResult = await supabase.from('lunch_pricing').insert({
+            menu_data_id: currentMenuId,
+            on_site: data.lunchPricing.onSite,
+            takeaway: data.lunchPricing.takeaway
+          });
+          if (pricingResult.error) {
+            console.error('[SaveDB] Lunch pricing insert failed:', pricingResult.error);
+            throw new Error(`LUNCH_PRICING_INSERT_FAILED: ${pricingResult.error.message}`);
+          }
+
+          console.log('[SaveDB] Inserting category texts...');
+          const categoryResult = await supabase.from('category_texts').insert({
+            menu_data_id: currentMenuId,
+            always_on_title: data.categoryTexts.alwaysOnTitle,
+            always_on_description: data.categoryTexts.alwaysOnDescription,
+            pinsa_pizza_title: data.categoryTexts.pinsaPizzaTitle,
+            pinsa_pizza_description: data.categoryTexts.pinsaPizzaDescription,
+            salads_title: data.categoryTexts.saladsTitle,
+            salads_description: data.categoryTexts.saladsDescription,
+            pasta_title: data.categoryTexts.pastaTitle,
+            pasta_description: data.categoryTexts.pastaDescription
+          });
+          if (categoryResult.error) {
+            console.error('[SaveDB] Category texts insert failed:', categoryResult.error);
+            throw new Error(`CATEGORY_TEXTS_INSERT_FAILED: ${categoryResult.error.message}`);
           }
 
           const duration = Date.now() - startTime;
-          console.log(`Menu saved successfully in ${duration}ms`);
+          console.log(`[SaveDB] ✓ Menu saved successfully in ${duration}ms`);
         })(),
         timeoutPromise
       ]);
@@ -785,22 +860,36 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      console.error(`Error saving to database after ${duration}ms:`, error);
+      console.error(`[SaveDB] ✗ Error after ${duration}ms:`, error);
 
       if (!silent) {
-        if (error.message === 'Save operation timed out') {
-          toast({
-            title: 'Timeout',
-            description: 'Sparningen tog för lång tid. Försök igen.',
-            variant: 'destructive'
-          });
-        } else {
-          toast({
-            title: 'Fel',
-            description: 'Kunde inte spara menyn. Försök igen.',
-            variant: 'destructive'
-          });
+        // PHASE 1 FIX: Better Error Messages
+        let errorTitle = 'Fel';
+        let errorDescription = 'Kunde inte spara menyn. Försök igen.';
+
+        if (error.message === 'TIMEOUT') {
+          errorTitle = 'Timeout';
+          errorDescription = 'Sparningen tog för lång tid (>20s). Försök igen.';
+        } else if (error.message === 'SESSION_EXPIRED') {
+          errorTitle = 'Session utgången';
+          errorDescription = 'Din session har löpt ut. Logga in igen.';
+        } else if (error.message === 'NOT_ADMIN') {
+          errorTitle = 'Åtkomst nekad';
+          errorDescription = 'Du har inte administratörsbehörighet.';
+        } else if (error.message === 'PERMISSION_CHECK_FAILED') {
+          errorTitle = 'Behörighetskontroll misslyckades';
+          errorDescription = 'Kunde inte verifiera behörigheter. Försök igen.';
+        } else if (error.message?.includes('_FAILED:')) {
+          const [operation, details] = error.message.split(': ');
+          errorTitle = 'Databasfel';
+          errorDescription = `${operation.replace(/_/g, ' ')}: ${details}`;
         }
+
+        toast({
+          title: errorTitle,
+          description: errorDescription,
+          variant: 'destructive'
+        });
       }
       throw error;
     } finally {
