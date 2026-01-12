@@ -103,12 +103,18 @@ const WeeklyMenu = () => {
                         <Badge className="mb-4 bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30 group-hover/pasta:scale-110 transition-transform duration-300">
                           Veckans Pasta
                         </Badge>
-                        <h3 className="text-xl font-medium text-restaurant-text-light group-hover/pasta:text-restaurant-gold transition-colors duration-300 mb-2">
-                          {day.pasta.name}
-                        </h3>
-                        <p className="text-restaurant-text-light/80 leading-relaxed">
-                          {day.pasta.description}
-                        </p>
+                        <div className="mb-3">
+                          <span className="text-sm text-restaurant-gold/70 uppercase tracking-wide font-medium">Rätt</span>
+                          <h3 className="text-xl font-medium text-restaurant-text-light group-hover/pasta:text-restaurant-gold transition-colors duration-300">
+                            {day.pasta.name}
+                          </h3>
+                        </div>
+                        <div>
+                          <span className="text-sm text-restaurant-gold/70 uppercase tracking-wide font-medium">Beskrivning</span>
+                          <p className="text-restaurant-text-light/80 leading-relaxed mt-1">
+                            {day.pasta.description}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </CardContent>
