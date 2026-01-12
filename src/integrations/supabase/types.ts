@@ -209,6 +209,7 @@ export type Database = {
           meals: Json
           menu_data_id: string
           order_index: number
+          pasta: Json | null
         }
         Insert: {
           day: string
@@ -216,6 +217,7 @@ export type Database = {
           meals?: Json
           menu_data_id: string
           order_index: number
+          pasta?: Json | null
         }
         Update: {
           day?: string
@@ -223,6 +225,7 @@ export type Database = {
           meals?: Json
           menu_data_id?: string
           order_index?: number
+          pasta?: Json | null
         }
         Relationships: [
           {

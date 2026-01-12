@@ -9,9 +9,15 @@ export interface WeeklyMeal {
   type: 'Kött' | 'Fisk' | 'Veg';
 }
 
+export interface WeeklyPasta {
+  name: string;
+  description: string;
+}
+
 export interface DayMenu {
   day: string;
   meals: WeeklyMeal[];
+  pasta: WeeklyPasta;
 }
 
 // Individual menu items (with prices)
@@ -77,6 +83,7 @@ interface MenuContextType {
   deleteLunchIncludedItem: (index: number) => void;
   updateLunchPricing: (pricing: LunchPricing) => void;
   updateWeek: (week: number) => void;
+  updateDayPasta: (dayIndex: number, pasta: WeeklyPasta) => void;
   updateCategoryTexts: (texts: CategoryTexts) => void;
   isSaving: boolean;
 }
@@ -114,7 +121,11 @@ const DEFAULT_MENU: MenuData = {
           description: "stuvad blandsvamp, parmesan, sidosallad",
           type: "Veg"
         }
-      ]
+      ],
+      pasta: {
+        name: "Veckans pasta",
+        description: "Beskrivning kommer snart..."
+      }
     },
     {
       day: "Tisdag",
@@ -134,7 +145,11 @@ const DEFAULT_MENU: MenuData = {
           description: "stuvad blandsvamp, parmesan, sidosallad",
           type: "Veg"
         }
-      ]
+      ],
+      pasta: {
+        name: "Veckans pasta",
+        description: "Beskrivning kommer snart..."
+      }
     },
     {
       day: "Onsdag",
@@ -154,7 +169,11 @@ const DEFAULT_MENU: MenuData = {
           description: "stuvad blandsvamp, parmesan, sidosallad",
           type: "Veg"
         }
-      ]
+      ],
+      pasta: {
+        name: "Veckans pasta",
+        description: "Beskrivning kommer snart..."
+      }
     },
     {
       day: "Torsdag",
@@ -174,7 +193,11 @@ const DEFAULT_MENU: MenuData = {
           description: "rostad morot, parmesan",
           type: "Veg"
         }
-      ]
+      ],
+      pasta: {
+        name: "Veckans pasta",
+        description: "Beskrivning kommer snart..."
+      }
     },
     {
       day: "Fredag",
@@ -194,7 +217,11 @@ const DEFAULT_MENU: MenuData = {
           description: "rostad morot, parmesan",
           type: "Veg"
         }
-      ]
+      ],
+      pasta: {
+        name: "Veckans pasta",
+        description: "Beskrivning kommer snart..."
+      }
     }
   ],
   alwaysOnMenu: [
@@ -479,7 +506,8 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Transform database data to MenuData format
       const weeklyLunch: DayMenu[] = (weeklyLunchRes.data || []).map(row => ({
         day: row.day,
-        meals: (row.meals as unknown) as WeeklyMeal[]
+        meals: (row.meals as unknown) as WeeklyMeal[],
+        pasta: (row.pasta as unknown) as WeeklyPasta || { name: '', description: '' }
       }));
 
       const alwaysOnMenu = (menuItemsRes.data || [])
@@ -583,6 +611,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         menu_data_id: menuRecord.id,
         day: day.day,
         meals: day.meals as unknown as any,
+        pasta: day.pasta as unknown as any,
         order_index: index
       }));
       await supabase.from('weekly_lunch').insert(weeklyLunchData);
@@ -749,6 +778,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             menu_data_id: currentMenuId,
             day: day.day,
             meals: day.meals as unknown as any,
+            pasta: day.pasta as unknown as any,
             order_index: index
           }));
 
@@ -1162,6 +1192,17 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setMenuData({ ...menuData, categoryTexts: texts });
   };
 
+  // Daily Pasta handlers
+  const updateDayPasta = (dayIndex: number, pasta: WeeklyPasta) => {
+    const updatedData = {
+      ...menuData,
+      weeklyLunch: menuData.weeklyLunch.map((day, index) => 
+        index === dayIndex ? { ...day, pasta } : day
+      )
+    };
+    setMenuData(updatedData);
+  };
+
   return (
     <MenuContext.Provider value={{ 
       menuData, 
@@ -1186,6 +1227,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateLunchPricing,
       updateWeek,
       updateCategoryTexts,
+      updateDayPasta,
       isSaving
     }}>
       {children}

@@ -96,6 +96,21 @@ const WeeklyMenu = () => {
                         </div>
                       ))}
                     </div>
+                    
+                    {/* Veckans Pasta Card */}
+                    {day.pasta && day.pasta.name && (
+                      <div className="mt-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6 border border-restaurant-gold/30 hover:border-restaurant-gold/50 hover:-translate-y-2 hover:shadow-lg hover:shadow-restaurant-gold/10 transition-all duration-300 group/pasta">
+                        <Badge className="mb-4 bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30 group-hover/pasta:scale-110 transition-transform duration-300">
+                          Veckans Pasta
+                        </Badge>
+                        <h3 className="text-xl font-medium text-restaurant-text-light group-hover/pasta:text-restaurant-gold transition-colors duration-300 mb-2">
+                          {day.pasta.name}
+                        </h3>
+                        <p className="text-restaurant-text-light/80 leading-relaxed">
+                          {day.pasta.description}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
                 

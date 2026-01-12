@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useMenu, WeeklyMeal, MenuItem, MenuData } from "@/contexts/MenuContext";
+import { useMenu, WeeklyMeal, MenuItem, MenuData, WeeklyPasta } from "@/contexts/MenuContext";
 import { Lock, Save, Plus, Trash2, Eye, EyeOff, Utensils, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,6 +43,7 @@ const Admin = () => {
     updateLunchPricing,
     updateWeek,
     updateCategoryTexts,
+    updateDayPasta,
     isSaving
   } = useMenu();
   const { toast } = useToast();
@@ -252,6 +253,10 @@ const Admin = () => {
     updateDayMenu(dayIndex, updatedMeals);
   };
 
+  const handlePastaUpdate = (dayIndex: number, field: keyof WeeklyPasta, value: string) => {
+    const currentPasta = menuData.weeklyLunch[dayIndex].pasta || { name: '', description: '' };
+    updateDayPasta(dayIndex, { ...currentPasta, [field]: value });
+  };
 
   // Generic handlers for different menu sections
   const createMenuItemHandlers = (
@@ -645,6 +650,43 @@ const Admin = () => {
                         <Plus className="w-4 h-4 mr-2" />
                         Lägg till rätt
                       </Button>
+
+                      {/* Veckans Pasta Section */}
+                      <div className="border-t border-muted pt-4 mt-4">
+                        <h4 className="font-medium text-restaurant-gold mb-3 flex items-center gap-2">
+                          <Utensils className="w-4 h-4" />
+                          Veckans Pasta
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Pasta namn</label>
+                            <Input
+                              value={day.pasta?.name || ''}
+                              onChange={(e) => handlePastaUpdate(dayIndex, 'name', e.target.value)}
+                              placeholder="T.ex. Bucatini Carbonara"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-1 block">Beskrivning</label>
+                            <Textarea
+                              value={day.pasta?.description || ''}
+                              onChange={(e) => handlePastaUpdate(dayIndex, 'description', e.target.value)}
+                              placeholder="T.ex. bacon, grädde, äggula, parmesan"
+                              rows={2}
+                            />
+                          </div>
+                          {previewMode && day.pasta?.name && (
+                            <div className="bg-muted/10 p-3 rounded border-l-4 border-restaurant-gold">
+                              <div className="font-medium text-restaurant-gold">
+                                Veckans Pasta: {day.pasta.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {day.pasta.description}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
