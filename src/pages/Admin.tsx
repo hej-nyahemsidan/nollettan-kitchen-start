@@ -578,7 +578,7 @@ const Admin = () => {
                   <CardContent>
                     <div className="space-y-4">
                       {day.meals.map((meal, mealIndex) => (
-                        <div key={mealIndex} className="border border-muted rounded-lg p-4 space-y-3">
+                        <div key={mealIndex} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                           <div className="flex justify-between items-start">
                             <Badge className={getMealTypeColor(meal.type)}>
                               {meal.type}
@@ -652,7 +652,7 @@ const Admin = () => {
                       </Button>
 
                       {/* Veckans Pasta Section */}
-                      <div className="border-t border-muted pt-4 mt-4">
+                      <div className="border-t border-restaurant-gold/30 pt-4 mt-4">
                         <h4 className="font-medium text-restaurant-gold mb-3 flex items-center gap-2">
                           <Utensils className="w-4 h-4" />
                           Veckans Pasta
@@ -707,7 +707,7 @@ const Admin = () => {
           <CardContent>
             <div className="space-y-4">
               {menuData.alwaysOnMenu.map((item, index) => (
-                <div key={index} className="border border-muted rounded-lg p-4 space-y-3">
+                <div key={index} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <Badge className="bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30">
                       {item.category}
@@ -789,7 +789,7 @@ const Admin = () => {
           <CardContent>
             <div className="space-y-4">
               {menuData.pinsaPizza.map((item, index) => (
-                <div key={index} className="border border-muted rounded-lg p-4 space-y-3">
+                <div key={index} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <Badge className="bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30">
                       {item.category}
@@ -871,7 +871,7 @@ const Admin = () => {
           <CardContent>
             <div className="space-y-4">
               {menuData.salads.map((item, index) => (
-                <div key={index} className="border border-muted rounded-lg p-4 space-y-3">
+                <div key={index} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <Badge className="bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30">
                       {item.category}
@@ -953,7 +953,7 @@ const Admin = () => {
           <CardContent>
             <div className="space-y-4">
               {menuData.pasta.map((item, index) => (
-                <div key={index} className="border border-muted rounded-lg p-4 space-y-3">
+                <div key={index} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <Badge className="bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30">
                       {item.category}
@@ -1032,7 +1032,7 @@ const Admin = () => {
           <CardContent>
             <div className="space-y-4">
               {menuData.lunchIncluded.map((item, index) => (
-                <div key={index} className="border border-muted rounded-lg p-4 space-y-3">
+                <div key={index} className="border border-restaurant-gold/30 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                       <div>
