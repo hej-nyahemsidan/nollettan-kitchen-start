@@ -100,7 +100,7 @@ const WeeklyMenu = () => {
                     {/* Veckans Pasta Card */}
                     {day.pasta && day.pasta.name && (
                       <div className="mt-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6 border border-restaurant-gold/30 hover:border-restaurant-gold/50 hover:-translate-y-2 hover:shadow-lg hover:shadow-restaurant-gold/10 transition-all duration-300 group/pasta">
-                        <h4 className="text-xl font-heading text-restaurant-gold mb-4 flex items-center gap-2 group-hover/pasta:scale-105 transition-transform duration-300">
+                        <h4 className="text-xl font-heading text-restaurant-gold mb-4 flex items-center gap-2">
                           <Utensils className="w-5 h-5" />
                           Veckans Pasta
                         </h4>
