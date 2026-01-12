@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Coffee, ChefHat, Soup, Salad, Cookie, Heart } from "lucide-react";
+import { Clock, Coffee, ChefHat, Soup, Salad, Cookie, Heart, Utensils } from "lucide-react";
 import { useMenu } from "@/contexts/MenuContext";
 import { icons } from "lucide-react";
 
@@ -100,9 +100,10 @@ const WeeklyMenu = () => {
                     {/* Veckans Pasta Card */}
                     {day.pasta && day.pasta.name && (
                       <div className="mt-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6 border border-restaurant-gold/30 hover:border-restaurant-gold/50 hover:-translate-y-2 hover:shadow-lg hover:shadow-restaurant-gold/10 transition-all duration-300 group/pasta">
-                        <Badge className="mb-4 bg-restaurant-gold/20 text-restaurant-gold border-restaurant-gold/30 group-hover/pasta:scale-110 transition-transform duration-300">
+                        <h4 className="text-xl font-heading text-restaurant-gold mb-4 flex items-center gap-2 group-hover/pasta:scale-105 transition-transform duration-300">
+                          <Utensils className="w-5 h-5" />
                           Veckans Pasta
-                        </Badge>
+                        </h4>
                         <h3 className="text-xl font-medium text-restaurant-text-light group-hover/pasta:text-restaurant-gold transition-colors duration-300 mb-2">
                           {day.pasta.name}
                         </h3>
