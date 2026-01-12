@@ -659,11 +659,11 @@ const Admin = () => {
                         </h4>
                         <div className="space-y-3">
                           <div>
-                            <label className="text-sm font-medium mb-1 block">Pasta namn</label>
+                            <label className="text-sm font-medium mb-1 block">Rätt</label>
                             <Input
                               value={day.pasta?.name || ''}
                               onChange={(e) => handlePastaUpdate(dayIndex, 'name', e.target.value)}
-                              placeholder="T.ex. Bucatini Carbonara"
+                              placeholder="Rätt namn"
                             />
                           </div>
                           <div>
