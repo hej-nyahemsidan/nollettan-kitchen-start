@@ -154,8 +154,11 @@ const Navigation = memo(() => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Meny"
+            aria-expanded={isMobileMenuOpen}
             className={`md:hidden ${isOverLightSection ? 'text-restaurant-dark' : 'text-restaurant-text-light'} hover:text-restaurant-gold transition-colors`}
           >
+
             {isMobileMenuOpen ? <X className="icon-standard" /> : <Menu className="icon-standard" />}
           </button>
         </div>
