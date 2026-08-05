@@ -27,8 +27,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-restaurant-dark">
+      <SeoHead
+        title="Noll Ettan – Lunch & Catering i Hammarby Sjöstad"
+        description="Kvarterskrog i Hammarby Sjöstad. Dagens lunch 11–14 mån–fre och catering i Stockholm från 195 kr/person. Ring 08-33 32 03."
+        path="/"
+        jsonLd={[restaurantSchema, localBusinessSchema]}
+      />
       <Navigation />
       <Hero />
+
       <Suspense fallback={<LoadingSpinner />}>
         <div className="-mt-8 md:-mt-12 relative z-20">
           <LazyAbout />
