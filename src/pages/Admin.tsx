@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMenu, WeeklyMeal, MenuItem, MenuData, WeeklyPasta } from "@/contexts/MenuContext";
 import { Lock, Save, Plus, Trash2, Eye, EyeOff, Utensils, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SeoHead from "@/components/SeoHead";
+
 
 const Admin = () => {
   const navigate = useNavigate();
