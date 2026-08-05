@@ -148,56 +148,26 @@ const Admin = () => {
       });
 
       if (error) {
-        // If user doesn't exist, try to sign up and grant admin role
-        if (error.message.includes('Invalid login credentials')) {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-          });
-
-          if (signUpError) throw signUpError;
-
-          if (signUpData.user) {
-            // Grant admin role to new user
-            const { error: roleError } = await supabase
-              .from('user_roles')
-              .insert({
-                user_id: signUpData.user.id,
-                role: 'admin'
-              });
-
-            if (roleError) {
-              console.error('Error granting admin role:', roleError);
-              throw new Error('Kunde inte tilldela administratörsrättigheter');
-            }
-
-            toast({
-              title: "Konto skapat!",
-              description: "Du är nu inloggad som administratör.",
-            });
-          }
-        } else {
-          throw error;
-        }
-      } else {
-        // Check if existing user has admin role
-        const { data: roles, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .single();
-
-        if (roleError || !roles) {
-          await supabase.auth.signOut();
-          throw new Error('Du har inte administratörsbehörighet');
-        }
-
-        toast({
-          title: "Inloggad!",
-          description: "Välkommen till admin-panelen.",
-        });
+        throw new Error('Kontrollera dina uppgifter och försök igen.');
       }
+
+      // Check if existing user has admin role
+      const { data: roles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError || !roles) {
+        await supabase.auth.signOut();
+        throw new Error('Du har inte administratörsbehörighet');
+      }
+
+      toast({
+        title: "Inloggad!",
+        description: "Välkommen till admin-panelen.",
+      });
     } catch (error: any) {
       toast({
         title: "Inloggning misslyckades",
