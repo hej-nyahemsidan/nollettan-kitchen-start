@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMenu, WeeklyMeal, MenuItem, MenuData, WeeklyPasta } from "@/contexts/MenuContext";
 import { Lock, Save, Plus, Trash2, Eye, EyeOff, Utensils, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SeoHead from "@/components/SeoHead";
+
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -300,7 +302,14 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker flex items-center justify-center p-4">
+        <SeoHead
+          title="Logga in – Noll Ettan admin"
+          description="Inloggning till Noll Ettans interna adminpanel."
+          path="/admin"
+          noindex
+        />
         <Card className="w-full max-w-md">
+
           <CardHeader className="text-center">
             <div className="flex items-center justify-between mb-2">
               <Button
@@ -370,6 +379,13 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
+      <SeoHead
+        title="Adminpanel – Noll Ettan"
+        description="Intern adminpanel för att uppdatera lunch- och cateringmenyer hos Noll Ettan."
+        path="/admin"
+        noindex
+      />
+
       {/* Loading Overlay */}
       {isSaving && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
