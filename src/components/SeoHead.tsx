@@ -18,7 +18,14 @@ const SeoHead = ({ title, description, path, noindex, jsonLd }: SeoHeadProps) =>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
-      {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
+      <meta
+        name="robots"
+        content={
+          noindex
+            ? "noindex, nofollow"
+            : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        }
+      />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
