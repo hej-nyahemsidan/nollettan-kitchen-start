@@ -74,15 +74,32 @@ const Hero = memo(() => {
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-4 sm:mt-2 md:mt-0 animate-fade-in">
         {/* Main Heading */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-light text-gradient-gold mb-8 leading-[1.1] drop-shadow-lg animate-in slide-in-from-bottom-8 duration-1000 translate-x-[0.25%]" style={{ textRendering: 'optimizeLegibility', letterSpacing: '0.02em', paddingBottom: '0.2em' }}>
-          Enkel vardagslyx
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-light text-gradient-gold mb-6 leading-[1.1] drop-shadow-lg animate-in slide-in-from-bottom-8 duration-1000 translate-x-[0.25%]" style={{ textRendering: 'optimizeLegibility', letterSpacing: '0.02em', paddingBottom: '0.2em' }}>
+          Noll Ettan – lunch & catering i Hammarby Sjöstad
         </h1>
-        
+
+        <p className="text-2xl md:text-3xl font-heading font-light text-restaurant-gold/90 mb-6 animate-in slide-in-from-bottom-8 duration-1000 delay-200">
+          Enkel vardagslyx
+        </p>
+
+        {/* Rating */}
+        <div className="flex items-center justify-center gap-2 mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-200">
+          <span className="flex items-center gap-0.5" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Star key={i} className="w-5 h-5 fill-restaurant-gold text-restaurant-gold" />
+            ))}
+          </span>
+          <span className="text-white/90 text-base font-medium">
+            4.9/5 baserat på 65 omdömen
+          </span>
+        </div>
+
         {/* Ingress */}
         <p className="text-lg md:text-xl text-white/90 mb-12 font-light max-w-3xl mx-auto leading-relaxed animate-in slide-in-from-bottom-8 duration-1000 delay-300">
           Med omtanke i varje detalj hittar du Noll Ettan mitt i Sthlm 01-huset – en bistro som bjuder på mer än bara lunch. 
           Här möts nygräddat bröd, en fräsch salladsbuffé och noga utvalda råvaror i en varm atmosfär.
         </p>
+
         
         {/* Weekly Lunch Button */}
         <div className="mb-8 animate-in slide-in-from-bottom-8 duration-1000 delay-500">
