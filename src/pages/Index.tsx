@@ -2,6 +2,9 @@ import { Suspense, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
+import SeoHead from "@/components/SeoHead";
+import { restaurantSchema, localBusinessSchema } from "@/lib/structured-data";
+
 // Import critical above-the-fold components directly for faster loading
 import WeeklyMenu from "@/components/WeeklyMenu";
 import { 
