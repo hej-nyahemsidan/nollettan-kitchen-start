@@ -409,7 +409,7 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (!currentMenuId) return;
 
-    let reloadTimer: NodeJS.Timeout;
+    let reloadTimer: ReturnType<typeof setTimeout>;
 
     const handleDatabaseChange = () => {
       // Don't reload if we just saved (within 3 seconds)
