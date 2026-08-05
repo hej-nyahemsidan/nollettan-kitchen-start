@@ -302,7 +302,14 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker flex items-center justify-center p-4">
+        <SeoHead
+          title="Logga in – Noll Ettan admin"
+          description="Inloggning till Noll Ettans interna adminpanel."
+          path="/admin"
+          noindex
+        />
         <Card className="w-full max-w-md">
+
           <CardHeader className="text-center">
             <div className="flex items-center justify-between mb-2">
               <Button
