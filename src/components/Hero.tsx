@@ -1,6 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Phone, Calendar, PartyPopper } from "lucide-react";
+import { Phone, Calendar, PartyPopper, Star } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Hero = memo(() => {
