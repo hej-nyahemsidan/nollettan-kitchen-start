@@ -370,6 +370,13 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-restaurant-dark to-restaurant-darker p-4">
+      <SeoHead
+        title="Adminpanel – Noll Ettan"
+        description="Intern adminpanel för att uppdatera lunch- och cateringmenyer hos Noll Ettan."
+        path="/admin"
+        noindex
+      />
+
       {/* Loading Overlay */}
       {isSaving && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
