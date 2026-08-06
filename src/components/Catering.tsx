@@ -44,38 +44,9 @@ const cateringOptions = [
       "Risotto med svamp och parmesan",
       "Tiramisu till efterrätt"
     ]
-  },
-  {
-    title: "Sliders & Varma Wraps",
-    icon: "🍔",
-    description: "Perfekt för lunch eller mingel - lätta att äta och alltid populära",
-    examples: [
-      "BBQ pulled pork sliders",
-      "Halloumi och grönsakssliders",
-      "Kyckling teriyaki wraps",
-      "Vegetariska wraps med hummus",
-      "Cheeseburger sliders",
-      "Falafel wraps med tzatziki",
-      "Lax och avokado wraps",
-      "Mini fish & chips sliders"
-    ]
-  },
-  {
-    title: "Mellanöstern Mezze",
-    icon: "🫒",
-    description: "Färska mezze-rätter, hummus och välkryddade grönsaker från Mellanöstern",
-    examples: [
-      "Hummus med olivolja och paprika",
-      "Baba ghanoush - aubergineröra",
-      "Tabboule med persilja och tomat",
-      "Falafel med tahini-sås",
-      "Dolmar - vinbladsdolmar",
-      "Fatayer - spenatpiroger",
-      "Grillad halloumi",
-      "Varmt pitabröd"
-    ]
   }
 ];
+
 
 const Catering = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
